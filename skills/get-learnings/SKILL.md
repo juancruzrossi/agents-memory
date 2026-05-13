@@ -17,7 +17,6 @@ Always use the shared internal tool. Do not inspect SQLite directly.
 ## Rules
 
 - Always respond in the same language the user is writing in.
-- Treat `--all` as the only supported flag in v1.
 - Do not inspect or manually merge memories from other projects; rely on the Internal Tool's related Project discovery.
 - Do not create, edit, retire, or supersede memories.
 - Do not add files to the project.
