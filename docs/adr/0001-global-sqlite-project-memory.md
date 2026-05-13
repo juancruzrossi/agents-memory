@@ -1,0 +1,3 @@
+# Global SQLite Project Memory
+
+Agents Memory stores project-scoped Memory Entries in a global SQLite database under `~/.agents-memory` instead of writing files into individual projects. The first schema uses a single `projects` table and a single `memory_entries` table, identifies projects by Git remote plus relative path when available or canonical path otherwise, and preserves history by creating replacement rows while marking older rows as superseded. This keeps projects clean, supports Codex, Claude Code, OpenCode, and Amp through shared skills, and avoids forcing future sessions to rediscover project decisions while still keeping obsolete knowledge out of startup injection.
