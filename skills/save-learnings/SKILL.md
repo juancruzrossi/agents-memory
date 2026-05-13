@@ -84,6 +84,7 @@ Send a JSON object with an `operations` array:
 
 ## Rules
 
+- Always respond in the same language the user is writing in.
 - Do not store transcripts or conversation summaries.
 - Do not edit old rows in place; use `supersede`.
 - Do not persist unapproved operations.
