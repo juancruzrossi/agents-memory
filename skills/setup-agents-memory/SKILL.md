@@ -17,10 +17,11 @@ Configure only the current agent client. Do not configure other agents.
    - Claude Code: `~/.claude`
    - OpenCode: `~/.config/opencode`
    - Amp: `~/.config/amp`
-3. Verify this agent has symlinks to:
-   - `~/.agents-memory/skills/get-learnings`
-   - `~/.agents-memory/skills/save-learnings`
-   - `~/.agents-memory/skills/setup-agents-memory`
+3. Ensure this agent has symlinks to all three skills. For each skill (`get-learnings`, `save-learnings`, `setup-agents-memory`), check whether `~/.<agent>/skills/<skill>` exists and points to `~/.agents-memory/skills/<skill>`. If a symlink is missing, create it:
+   ```bash
+   ln -s "$(python3 -c "import os; print(os.path.relpath('$HOME/.agents-memory/skills/<skill>', '$HOME/.<agent>/skills'))")" ~/.<agent>/skills/<skill>
+   ```
+   Do not overwrite an existing file or symlink without explicit user confirmation.
 4. Invoke the internal tool to configure the current agent only:
    `~/.agents-memory/bin/agents-memory setup --agent <detected-agent> --cwd "$PWD"`
 5. If the hook or plugin format for the current agent is unclear, look up current official documentation before editing config.
