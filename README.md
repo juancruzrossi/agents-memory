@@ -1,20 +1,22 @@
 # agents-memory
 
-Project memory for AI coding agents. Each session starts with context from previous ones — you stop repeating yourself, agents stop rediscovering the same things.
+Project memory for AI coding agents. Each session starts with what earlier ones learned, so you stop repeating yourself and agents stop rediscovering the same things.
 
-Stores decisions, instructions, learnings, and observations per project in a local SQLite database (`~/.agents-memory/memory.sqlite`). On session start, active memories are injected into the agent's context window automatically.
+Decisions, instructions, learnings, and observations are stored per project in a local SQLite database (`~/.agents-memory/memory.sqlite`). At session start, the active memories for the current project are injected into the agent's context automatically.
 
 ## Install
 
 ```bash
-bash scripts/install.sh
+curl -fsSL https://raw.githubusercontent.com/juancruzrossi/agents-memory/main/scripts/install.sh | bash
 ```
 
-Requires Python 3.11+. Installs the CLI to `~/.agents-memory/bin/agents-memory` and symlinks the three skills into each detected agent.
+Requires Python 3.11+ and git. This installs the CLI to `~/.agents-memory/bin/agents-memory` and symlinks the skills into every coding agent it detects (Claude Code, Codex, OpenCode, Amp).
+
+Re-running the command updates an existing installation. Stored memories are backed up first and never overwritten.
 
 ## Setup
 
-Run once per agent to configure startup injection:
+Once per agent, configure startup injection:
 
 ```
 /setup-agents-memory
@@ -22,15 +24,13 @@ Run once per agent to configure startup injection:
 
 ## Usage
 
-Save memories at the end of a session:
+Save memories from the current session. The agent proposes changes and waits for your approval before writing anything:
 
 ```
 /save-learnings
 ```
 
-The agent reviews the conversation, proposes changes, and waits for your approval before writing anything.
-
-To inspect what's stored for the current project:
+Inspect what's stored for the current project:
 
 ```
 /get-learnings
@@ -38,14 +38,14 @@ To inspect what's stored for the current project:
 
 ## Memory types
 
-| Type | Use it when |
+| Type | Use when |
 |---|---|
 | `instruction` | the agent should follow a rule or process |
-| `decision` | you chose a direction and want to preserve the trade-off |
+| `decision` | you chose a direction and want to keep the trade-off |
 | `learning` | stable project knowledge worth carrying forward |
 | `observation` | something discovered, not yet normative |
 
-Each entry has a priority (`high`, `medium`, `low`) that controls startup budget ordering.
+Each entry has a priority (`high`, `medium`, `low`) that orders it within the startup budget.
 
 ## Supported agents
 
@@ -54,25 +54,25 @@ Each entry has a priority (`high`, `medium`, `low`) that controls startup budget
 | Claude Code | ✓ | `SessionStart` hook |
 | Codex | ✓ | `SessionStart` hook |
 | OpenCode | ✓ | Plugin (`system.transform`) |
-| Amp | ✓ | Skills only (v1) |
+| Amp | ✓ | Skills only |
+
+## Project identity
+
+Repos with a Git remote are identified by remote URL + relative path. Repos without one use their canonical filesystem path. The same repo cloned to different directories shares the same memories.
 
 ## Development
 
 ```bash
-uv run pytest              # run tests
-uv run ruff check src tests
-uv run mypy src
-bash scripts/update.sh     # sync code to ~/.agents-memory after changes
+uv run pytest                # tests
+uv run ruff check src tests  # lint
+uv run mypy src              # type-check
+bash scripts/update.sh       # sync local changes into ~/.agents-memory
 ```
-
-## How project identity works
-
-Projects with a Git remote are identified by their remote URL + relative path. Projects without a remote use their canonical filesystem path. This means the same repo cloned to different directories shares the same memories.
 
 ## Uninstall
 
 ```bash
-bash scripts/uninstall.sh
+curl -fsSL https://raw.githubusercontent.com/juancruzrossi/agents-memory/main/scripts/uninstall.sh | bash
 ```
 
-Removes symlinks and the CLI. Stored memories in `~/.agents-memory/memory.sqlite` are kept by default.
+Removes the symlinks and CLI. Memories in `~/.agents-memory/memory.sqlite` are kept.
