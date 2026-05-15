@@ -56,10 +56,6 @@ Each entry has a priority (`high`, `medium`, `low`) that orders it within the st
 | OpenCode | ✓ | Plugin (`system.transform`) |
 | Amp | ✓ | Skills only |
 
-## Project identity
-
-Repos with a Git remote are identified by remote URL + relative path. Repos without one use their canonical filesystem path. The same repo cloned to different directories shares the same memories.
-
 ## Development
 
 ```bash
