@@ -24,8 +24,8 @@ def resolve_project_identity(cwd: Path) -> ProjectIdentity:
             relative = os.path.relpath(canonical_path, git_root)
             if relative == ".":
                 relative = ""
-            identity_value = f"{remote.strip().removesuffix('.git')}|{relative}"
-            return ProjectIdentity("git", identity_value, canonical_path, git_root, remote.strip())
+            identity_value = f"{remote.removesuffix('.git')}|{relative}"
+            return ProjectIdentity("git", identity_value, canonical_path, git_root, remote)
     return ProjectIdentity("path", canonical_path, canonical_path, git_root, None)
 
 

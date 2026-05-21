@@ -158,7 +158,7 @@ def fetch_related_project_memory(
     *,
     include_all: bool,
 ) -> list[dict[str, Any]]:
-    current_path = project["canonical_path"].rstrip(os.sep)
+    current_path = project["canonical_path"]
     rows = conn.execute(
         """
         select projects.id, projects.identity_kind, projects.identity_value,
