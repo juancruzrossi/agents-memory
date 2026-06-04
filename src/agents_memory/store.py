@@ -10,6 +10,20 @@ from .constants import VALID_PRIORITIES, VALID_STATUSES, VALID_TYPES
 from .errors import AgentsMemoryError
 from .identity import resolve_project_identity
 
+ENTRY_SELECT_COLUMNS = (
+    "id, type, status, priority, content, rationale, agent, "
+    "superseded_by_id, created_at, status_changed_at"
+)
+
+ENTRY_ORDER_SQL = """
+order by
+  case status when 'active' then 0 when 'superseded' then 1 else 2 end,
+  case priority when 'high' then 0 when 'medium' then 1 else 2 end,
+  case type when 'instruction' then 0 when 'decision' then 1
+       when 'learning' then 2 else 3 end,
+  id
+"""
+
 
 def ensure_home(home: Path) -> None:
     home.mkdir(parents=True, exist_ok=True)
@@ -114,26 +128,20 @@ def ensure_project(conn: sqlite3.Connection, cwd: Path) -> tuple[int, dict[str, 
 
 
 def fetch_entries(
-    conn: sqlite3.Connection, project_id: int, *, include_all: bool
+    conn: sqlite3.Connection,
+    project_id: int,
+    *,
+    include_all: bool = False,
+    statuses: set[str] | None = None,
 ) -> list[dict[str, Any]]:
-    # include_all=False filters to active only; passing 1/0 avoids implicit bool→int coercion
+    if statuses is None:
+        statuses = set(VALID_STATUSES) if include_all else {"active"}
+    ordered = sorted(statuses)
+    placeholders = ",".join("?" for _ in ordered)
     rows = conn.execute(
-        """
-        select id, type, status, priority, content, rationale, agent, superseded_by_id,
-               created_at, status_changed_at
-        from memory_entries
-        where project_id = ?
-          and (? = 1 or status = 'active')
-        order by
-          case status when 'active' then 0 when 'superseded' then 1 else 2 end,
-          case priority when 'high' then 0 when 'medium' then 1 else 2 end,
-          case type
-            when 'instruction' then 0 when 'decision' then 1
-            when 'learning' then 2 else 3
-          end,
-          id
-        """,
-        (project_id, 1 if include_all else 0),
+        f"select {ENTRY_SELECT_COLUMNS} from memory_entries "
+        f"where project_id = ? and status in ({placeholders}) {ENTRY_ORDER_SQL}",
+        (project_id, *ordered),
     ).fetchall()
     return [dict(row) for row in rows]
 
