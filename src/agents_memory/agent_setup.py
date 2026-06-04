@@ -159,9 +159,7 @@ def save_json_object(path: Path, data: dict[str, Any]) -> None:
     path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
 
 
-def ensure_hook_command(
-    document: dict[str, Any], event_name: str, hook: dict[str, Any]
-) -> None:
+def ensure_hook_command(document: dict[str, Any], event_name: str, hook: dict[str, Any]) -> None:
     hooks = document.setdefault("hooks", {})
     if not isinstance(hooks, dict):
         raise AgentsMemoryError("hooks must be a JSON object")

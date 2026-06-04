@@ -18,8 +18,6 @@ def read_startup_budget(home: Path) -> int:
 
 
 def _read_budget_chars(text: str) -> int | None:
-    # Minimal TOML read: avoids stdlib `tomllib` (3.11+) so the tool runs on
-    # Python 3.9+. Only a top-level integer key is needed.
     in_root_table = True
     for raw_line in text.splitlines():
         line = raw_line.split("#", 1)[0].strip()
