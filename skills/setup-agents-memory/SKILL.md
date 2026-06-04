@@ -12,11 +12,11 @@ Configure only the current agent client. Do not configure other agents.
 
 1. Verify the internal tool:
    `~/.agents-memory/bin/agents-memory doctor`
-2. Detect the current agent client from the runtime context and filesystem:
-   - Codex: `~/.codex`
-   - Claude Code: `~/.claude`
-   - OpenCode: `~/.config/opencode`
-   - Amp: `~/.config/amp`
+2. Detect the current agent client from the runtime context and filesystem (the identifier in backticks is what you pass as `--agent`):
+   - `codex` (Codex): `~/.codex`
+   - `claude` (Claude Code): `~/.claude`
+   - `opencode` (OpenCode): `~/.config/opencode`
+   - `amp` (Amp): `~/.config/amp`
 3. Ensure this agent has symlinks to all three skills. For each skill (`get-learnings`, `save-learnings`, `setup-agents-memory`), check whether `~/.<agent>/skills/<skill>` exists and points to `~/.agents-memory/skills/<skill>`. If a symlink is missing, create it:
    ```bash
    ln -s "$(python3 -c "import os; print(os.path.relpath('$HOME/.agents-memory/skills/<skill>', '$HOME/.<agent>/skills'))")" ~/.<agent>/skills/<skill>

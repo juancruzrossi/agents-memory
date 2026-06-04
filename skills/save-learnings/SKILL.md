@@ -23,7 +23,7 @@ Persist only user-approved project memories. Never auto-save.
    - `content`
    - `rationale`
 5. Ask for explicit approval. Accept partial approval such as `approve 1,3,4`.
-6. Infer the current agent as `codex`, `claude-code`, `opencode`, or `amp`.
+6. Infer the current agent as `codex`, `claude`, `opencode`, or `amp`.
 7. Apply only approved operations by passing JSON to:
    `~/.agents-memory/bin/agents-memory apply --cwd "$PWD" --agent <agent> --operations-file -`
 8. Report the tool result.

@@ -388,7 +388,7 @@ class CliTestCase(unittest.TestCase):
         self.assertIn("SessionStart", codex_hooks["hooks"])
 
         exit_code, _, error = self.run_cli_with_home(
-            user_home, "setup", "--agent", "claude-code", "--cwd", str(self.project)
+            user_home, "setup", "--agent", "claude", "--cwd", str(self.project)
         )
         self.assertEqual(exit_code, 0, error)
         claude_settings_path = user_home / ".claude" / "settings.json"
@@ -482,7 +482,7 @@ class CliTestCase(unittest.TestCase):
             "--cwd",
             str(self.project),
             "--agent",
-            "claude-code",
+            "claude",
             "--operations-file",
             "-",
             stdin=json.dumps(payload),

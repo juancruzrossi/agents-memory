@@ -191,7 +191,7 @@ def cmd_setup(args: argparse.Namespace) -> int:
     if agent == "codex":
         configure_codex(home)
         setup_actions.append("codex hooks.json")
-    elif agent == "claude-code":
+    elif agent == "claude":
         configure_claude(home)
         setup_actions.append("claude settings.json")
     elif agent == "opencode":

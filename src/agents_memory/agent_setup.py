@@ -35,7 +35,7 @@ def ensure_agent_skills(home: Path, agent: str) -> None:
 def agent_root_path(agent: str) -> Path:
     if agent == "codex":
         return Path.home() / ".codex"
-    if agent == "claude-code":
+    if agent == "claude":
         return Path.home() / ".claude"
     if agent == "opencode":
         return Path.home() / ".config" / "opencode"
@@ -302,4 +302,4 @@ def _codex_hook_command(home: Path) -> str:
 def _claude_hook_command(home: Path) -> str:
     bin_path = shlex.quote(str(home / "bin" / "agents-memory"))
     cwd_expr = '"${CLAUDE_PROJECT_DIR:-$PWD}"'
-    return f"{bin_path} hook --agent claude-code --cwd {cwd_expr} --format text"
+    return f"{bin_path} hook --agent claude --cwd {cwd_expr} --format text"
