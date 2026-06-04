@@ -10,7 +10,7 @@ Decisions, instructions, learnings, and observations are stored per project in a
 curl -fsSL https://raw.githubusercontent.com/juancruzrossi/agents-memory/main/scripts/install.sh | bash
 ```
 
-Requires Python 3.9+ and git. This installs the CLI to `~/.agents-memory/bin/agents-memory` and symlinks the skills into every coding agent it detects (Claude Code, Codex, OpenCode, Amp).
+Requires Python 3.9+ and git. This installs the `agents-memory` CLI onto your `PATH` and symlinks the skills into every coding agent it detects (Claude Code, Codex, OpenCode, Amp). Open a new terminal afterwards to use it.
 
 Re-running the command updates an existing installation. Stored memories are backed up first and never overwritten.
 
@@ -35,6 +35,19 @@ Inspect what's stored for the current project:
 ```
 /get-learnings
 ```
+
+## Dashboard
+
+Browse and manage every stored memory in a local web UI:
+
+```
+agents-memory dashboard
+```
+
+This starts a local server (bound to `127.0.0.1` on a random free port) and opens your
+browser automatically. From there you can navigate projects, add entries, edit them in
+place, retire them, or permanently delete them. Pass `--no-open` to skip launching the
+browser, or `--port <n>` to pin a specific port.
 
 ## Memory types
 
@@ -71,4 +84,4 @@ bash scripts/update.sh       # sync local changes into ~/.agents-memory
 curl -fsSL https://raw.githubusercontent.com/juancruzrossi/agents-memory/main/scripts/uninstall.sh | bash
 ```
 
-Removes the symlinks and CLI. Memories in `~/.agents-memory/memory.sqlite` are kept.
+Removes the agent symlinks and the `PATH` entry from your shell profile. Memories in `~/.agents-memory/memory.sqlite` are kept.
