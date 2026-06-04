@@ -93,9 +93,6 @@ def main(argv: list[str] | None = None) -> int:
     dashboard_parser.add_argument(
         "--port", type=int, default=0, help="Port to bind (0 = OS-assigned)."
     )
-    dashboard_parser.add_argument(
-        "--no-open", action="store_true", help="Do not open the browser automatically."
-    )
     dashboard_parser.set_defaults(func=cmd_dashboard)
 
     args = parser.parse_args(argv)
@@ -242,7 +239,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
 
 def cmd_dashboard(args: argparse.Namespace) -> int:
     home = Path(args.home).expanduser()
-    run_dashboard(home, port=args.port, open_browser=not args.no_open)
+    run_dashboard(home, port=args.port)
     return 0
 
 

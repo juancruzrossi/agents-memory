@@ -530,7 +530,6 @@ class CliTestCase(unittest.TestCase):
         self.assertEqual(ctx.exception.code, 0)
         text = out.getvalue()
         self.assertIn("--port", text)
-        self.assertIn("--no-open", text)
         self.assertNotIn("--host", text)
 
     def test_dashboard_invokes_run_dashboard(self) -> None:
@@ -540,13 +539,6 @@ class CliTestCase(unittest.TestCase):
         mock_run.assert_called_once()
         self.assertEqual(mock_run.call_args.args[0], self.home)
         self.assertEqual(mock_run.call_args.kwargs["port"], 0)
-        self.assertTrue(mock_run.call_args.kwargs["open_browser"])
-
-    def test_dashboard_no_open_disables_browser(self) -> None:
-        with patch("agents_memory.cli.run_dashboard") as mock_run:
-            exit_code, _, error = self.run_cli("dashboard", "--no-open")
-        self.assertEqual(exit_code, 0, error)
-        self.assertFalse(mock_run.call_args.kwargs["open_browser"])
 
 
 if __name__ == "__main__":

@@ -189,15 +189,14 @@ def build_server(home: Path, port: int = 0) -> DashboardHTTPServer:
     return DashboardHTTPServer(("127.0.0.1", port), _Handler, home)
 
 
-def run_dashboard(home: Path, port: int = 0, open_browser: bool = True) -> None:
-    """Run the dashboard until interrupted, optionally opening the browser."""
+def run_dashboard(home: Path, port: int = 0) -> None:
+    """Run the dashboard until interrupted, opening the browser."""
     server = build_server(home, port)
     actual_port = server.server_address[1]
     url = f"http://127.0.0.1:{actual_port}"
     print(f"✓ Agents Memory Dashboard running at {url}")
-    if open_browser:
-        with suppress(Exception):
-            webbrowser.open(url)
+    with suppress(Exception):
+        webbrowser.open(url)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
