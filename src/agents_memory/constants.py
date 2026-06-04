@@ -3,7 +3,7 @@ from __future__ import annotations
 VALID_TYPES = {"instruction", "learning", "observation", "decision"}
 VALID_STATUSES = {"active", "retired", "superseded"}
 VALID_PRIORITIES = {"high", "medium", "low"}
-VALID_AGENTS = {"codex", "claude-code", "opencode", "amp", "unknown"}
+VALID_AGENTS = {"codex", "claude-code", "opencode", "amp", "dashboard", "unknown"}
 SUPPORTED_SETUP_AGENTS = {"codex", "claude-code", "opencode", "amp"}
 
 STATUS_ORDER = {

@@ -4,6 +4,7 @@ import argparse
 import json
 import os
 import sys
+from contextlib import closing
 from pathlib import Path
 from typing import Any
 
@@ -16,6 +17,7 @@ from .agent_setup import (
 )
 from .config import read_startup_budget
 from .constants import SUPPORTED_SETUP_AGENTS, VALID_AGENTS
+from .dashboard.server import run_dashboard
 from .errors import AgentsMemoryError
 from .formatters import (
     build_compact_view,
@@ -87,6 +89,15 @@ def main(argv: list[str] | None = None) -> int:
     doctor_parser = subparsers.add_parser("doctor", help="Check installation and store status.")
     doctor_parser.set_defaults(func=cmd_doctor)
 
+    dashboard_parser = subparsers.add_parser("dashboard", help="Launch the local web dashboard.")
+    dashboard_parser.add_argument(
+        "--port", type=int, default=0, help="Port to bind (0 = OS-assigned)."
+    )
+    dashboard_parser.add_argument(
+        "--no-open", action="store_true", help="Do not open the browser automatically."
+    )
+    dashboard_parser.set_defaults(func=cmd_dashboard)
+
     args = parser.parse_args(argv)
     try:
         return int(args.func(args))
@@ -102,7 +113,7 @@ def add_cwd_arg(parser: argparse.ArgumentParser) -> None:
 def cmd_init(args: argparse.Namespace) -> int:
     home = Path(args.home).expanduser()
     ensure_home(home)
-    with connect(home) as conn:
+    with closing(connect(home)) as conn:
         initialize_schema(conn)
     print(f"Initialized Agents Memory at {home}")
     return 0
@@ -110,7 +121,7 @@ def cmd_init(args: argparse.Namespace) -> int:
 
 def cmd_get(args: argparse.Namespace) -> int:
     home = Path(args.home).expanduser()
-    with connect_initialized(home) as conn:
+    with closing(connect_initialized(home)) as conn:
         memory_view = discover_project_memory(conn, Path(args.cwd), include_all=args.all)
     if args.format == "json":
         print(json.dumps(memory_view, indent=2))
@@ -124,7 +135,7 @@ def cmd_startup(args: argparse.Namespace) -> int:
     budget = args.budget_chars if args.budget_chars is not None else read_startup_budget(home)
     if budget <= 0:
         raise AgentsMemoryError("--budget-chars must be greater than zero")
-    with connect_initialized(home) as conn:
+    with closing(connect_initialized(home)) as conn:
         project, compact = build_startup_view(conn, Path(args.cwd), budget=budget)
     if args.format == "json":
         print(json.dumps({"project": project, "budget_chars": budget, **compact}, indent=2))
@@ -145,7 +156,7 @@ def cmd_hook(args: argparse.Namespace) -> int:
     home = Path(args.home).expanduser()
     agent = normalize_agent(args.agent)
     budget = read_startup_budget(home)
-    with connect_initialized(home) as conn:
+    with closing(connect_initialized(home)) as conn:
         project, compact = build_startup_view(conn, Path(args.cwd), budget=budget)
     text = format_startup_text(project, compact, budget)
     if agent == "codex":
@@ -203,7 +214,7 @@ def cmd_apply(args: argparse.Namespace) -> int:
     agent = normalize_agent(args.agent)
     operations = read_operations(args.operations_file)
     home = Path(args.home).expanduser()
-    with connect_initialized(home) as conn:
+    with closing(connect_initialized(home)) as conn:
         project_id, project = ensure_project(conn, Path(args.cwd))
         results = apply_operations(conn, project_id, operations, agent)
     if args.format == "json":
@@ -220,12 +231,18 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     print(f"SQLite store: {db_path}")
     print(f"Store exists: {'yes' if db_path.exists() else 'no'}")
     if db_path.exists():
-        with connect_initialized(home) as conn:
+        with closing(connect_initialized(home)) as conn:
             project_count = conn.execute("select count(*) from projects").fetchone()[0]
             entry_count = conn.execute("select count(*) from memory_entries").fetchone()[0]
         print(f"Projects: {project_count}")
         print(f"Memory entries: {entry_count}")
     print_codex_hook_status(home)
+    return 0
+
+
+def cmd_dashboard(args: argparse.Namespace) -> int:
+    home = Path(args.home).expanduser()
+    run_dashboard(home, port=args.port, open_browser=not args.no_open)
     return 0
 
 

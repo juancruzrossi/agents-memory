@@ -9,6 +9,7 @@ import tempfile
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
@@ -75,8 +76,14 @@ class CliTestCase(unittest.TestCase):
             ]
         }
         exit_code, _, error = self.run_cli(
-            "apply", "--cwd", str(child_project), "--agent", "codex",
-            "--operations-file", "-", stdin=json.dumps(payload),
+            "apply",
+            "--cwd",
+            str(child_project),
+            "--agent",
+            "codex",
+            "--operations-file",
+            "-",
+            stdin=json.dumps(payload),
         )
         self.assertEqual(exit_code, 0, error)
 
@@ -103,8 +110,14 @@ class CliTestCase(unittest.TestCase):
             ]
         }
         exit_code, _, error = self.run_cli(
-            "apply", "--cwd", str(self.project), "--agent", "codex",
-            "--operations-file", "-", stdin=json.dumps(payload),
+            "apply",
+            "--cwd",
+            str(self.project),
+            "--agent",
+            "codex",
+            "--operations-file",
+            "-",
+            stdin=json.dumps(payload),
         )
         self.assertEqual(exit_code, 0, error)
 
@@ -130,13 +143,23 @@ class CliTestCase(unittest.TestCase):
         }
 
         exit_code, _, error = self.run_cli(
-            "apply", "--cwd", str(self.project), "--agent", "codex",
-            "--operations-file", "-", stdin=json.dumps(payload),
+            "apply",
+            "--cwd",
+            str(self.project),
+            "--agent",
+            "codex",
+            "--operations-file",
+            "-",
+            stdin=json.dumps(payload),
         )
         self.assertEqual(exit_code, 0, error)
 
         exit_code, output, error = self.run_cli(
-            "startup", "--cwd", str(self.project), "--budget-chars", "9000",
+            "startup",
+            "--cwd",
+            str(self.project),
+            "--budget-chars",
+            "9000",
         )
 
         self.assertEqual(exit_code, 0, error)
@@ -157,8 +180,14 @@ class CliTestCase(unittest.TestCase):
             ]
         }
         self.run_cli(
-            "apply", "--cwd", str(self.project), "--agent", "codex",
-            "--operations-file", "-", stdin=json.dumps(create_payload),
+            "apply",
+            "--cwd",
+            str(self.project),
+            "--agent",
+            "codex",
+            "--operations-file",
+            "-",
+            stdin=json.dumps(create_payload),
         )
 
         supersede_payload = {
@@ -176,14 +205,18 @@ class CliTestCase(unittest.TestCase):
             ]
         }
         exit_code, _, error = self.run_cli(
-            "apply", "--cwd", str(self.project), "--agent", "codex",
-            "--operations-file", "-", stdin=json.dumps(supersede_payload),
+            "apply",
+            "--cwd",
+            str(self.project),
+            "--agent",
+            "codex",
+            "--operations-file",
+            "-",
+            stdin=json.dumps(supersede_payload),
         )
         self.assertEqual(exit_code, 0, error)
 
-        exit_code, all_output, error = self.run_cli(
-            "get", "--cwd", str(self.project), "--all"
-        )
+        exit_code, all_output, error = self.run_cli("get", "--cwd", str(self.project), "--all")
         self.assertEqual(exit_code, 0, error)
         self.assertIn("Superseded Decisions", all_output)
         self.assertIn("Superseded by: #2", all_output)
@@ -195,7 +228,11 @@ class CliTestCase(unittest.TestCase):
 
     def test_invalid_budget_fails(self) -> None:
         exit_code, _, error = self.run_cli(
-            "startup", "--cwd", str(self.project), "--budget-chars", "0",
+            "startup",
+            "--cwd",
+            str(self.project),
+            "--budget-chars",
+            "0",
         )
 
         self.assertEqual(exit_code, 1)
@@ -219,8 +256,14 @@ class CliTestCase(unittest.TestCase):
         }
 
         exit_code, _, error = self.run_cli(
-            "apply", "--cwd", str(self.project), "--agent", "codex",
-            "--operations-file", "-", stdin=json.dumps(payload),
+            "apply",
+            "--cwd",
+            str(self.project),
+            "--agent",
+            "codex",
+            "--operations-file",
+            "-",
+            stdin=json.dumps(payload),
         )
         self.assertEqual(exit_code, 1)
         self.assertIn("active memory entry #999 was not found", error)
@@ -242,8 +285,14 @@ class CliTestCase(unittest.TestCase):
             ]
         }
         self.run_cli(
-            "apply", "--cwd", str(self.project), "--agent", "codex",
-            "--operations-file", "-", stdin=json.dumps(create_payload),
+            "apply",
+            "--cwd",
+            str(self.project),
+            "--agent",
+            "codex",
+            "--operations-file",
+            "-",
+            stdin=json.dumps(create_payload),
         )
         supersede_payload = {
             "operations": [
@@ -258,14 +307,26 @@ class CliTestCase(unittest.TestCase):
             ]
         }
         self.run_cli(
-            "apply", "--cwd", str(self.project), "--agent", "codex",
-            "--operations-file", "-", stdin=json.dumps(supersede_payload),
+            "apply",
+            "--cwd",
+            str(self.project),
+            "--agent",
+            "codex",
+            "--operations-file",
+            "-",
+            stdin=json.dumps(supersede_payload),
         )
 
         retire_payload = {"operations": [{"action": "retire", "target_id": 1}]}
         exit_code, _, error = self.run_cli(
-            "apply", "--cwd", str(self.project), "--agent", "codex",
-            "--operations-file", "-", stdin=json.dumps(retire_payload),
+            "apply",
+            "--cwd",
+            str(self.project),
+            "--agent",
+            "codex",
+            "--operations-file",
+            "-",
+            stdin=json.dumps(retire_payload),
         )
 
         self.assertEqual(exit_code, 1)
@@ -287,8 +348,14 @@ class CliTestCase(unittest.TestCase):
             ]
         }
         self.run_cli(
-            "apply", "--cwd", str(self.project), "--agent", "codex",
-            "--operations-file", "-", stdin=json.dumps(payload),
+            "apply",
+            "--cwd",
+            str(self.project),
+            "--agent",
+            "codex",
+            "--operations-file",
+            "-",
+            stdin=json.dumps(payload),
         )
 
         exit_code, output, error = self.run_cli(
@@ -340,7 +407,7 @@ class CliTestCase(unittest.TestCase):
         codex_dir = user_home / ".codex"
         codex_dir.mkdir()
         shutil.copytree(ROOT / "skills", self.home / "skills")
-        state_key = f'{codex_dir / "hooks.json"}:session_start:0:0'
+        state_key = f"{codex_dir / 'hooks.json'}:session_start:0:0"
         (codex_dir / "config.toml").write_text(
             "\n".join(
                 [
@@ -411,8 +478,14 @@ class CliTestCase(unittest.TestCase):
             ]
         }
         exit_code, _, error = self.run_cli(
-            "apply", "--cwd", str(self.project), "--agent", "claude-code",
-            "--operations-file", "-", stdin=json.dumps(payload),
+            "apply",
+            "--cwd",
+            str(self.project),
+            "--agent",
+            "claude-code",
+            "--operations-file",
+            "-",
+            stdin=json.dumps(payload),
         )
         self.assertEqual(exit_code, 0, error)
 
@@ -423,7 +496,8 @@ class CliTestCase(unittest.TestCase):
         self.assertGreater(first_header, -1, "Expected 'Active Instructions' section")
         second_header = output.find("Active Instructions", first_header + 1)
         self.assertEqual(
-            second_header, -1,
+            second_header,
+            -1,
             "Found duplicate 'Active Instructions' header — grouping is broken",
         )
         self.assertIn("First high-priority instruction.", output)
@@ -448,6 +522,31 @@ class CliTestCase(unittest.TestCase):
 
         self.assertNotIn("hooks", output)
         self.assertIn("no verified startup hook integration", output)
+
+    def test_dashboard_help_lists_flags(self) -> None:
+        out = io.StringIO()
+        with self.assertRaises(SystemExit) as ctx, redirect_stdout(out):
+            main(["--home", str(self.home), "dashboard", "--help"])
+        self.assertEqual(ctx.exception.code, 0)
+        text = out.getvalue()
+        self.assertIn("--port", text)
+        self.assertIn("--no-open", text)
+        self.assertNotIn("--host", text)
+
+    def test_dashboard_invokes_run_dashboard(self) -> None:
+        with patch("agents_memory.cli.run_dashboard") as mock_run:
+            exit_code, _, error = self.run_cli("dashboard")
+        self.assertEqual(exit_code, 0, error)
+        mock_run.assert_called_once()
+        self.assertEqual(mock_run.call_args.args[0], self.home)
+        self.assertEqual(mock_run.call_args.kwargs["port"], 0)
+        self.assertTrue(mock_run.call_args.kwargs["open_browser"])
+
+    def test_dashboard_no_open_disables_browser(self) -> None:
+        with patch("agents_memory.cli.run_dashboard") as mock_run:
+            exit_code, _, error = self.run_cli("dashboard", "--no-open")
+        self.assertEqual(exit_code, 0, error)
+        self.assertFalse(mock_run.call_args.kwargs["open_browser"])
 
 
 if __name__ == "__main__":
