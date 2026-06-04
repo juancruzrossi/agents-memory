@@ -172,3 +172,76 @@ unlink_legacy_opencode_plugin() {
       ;;
   esac
 }
+
+PATH_BLOCK_BEGIN="# >>> agents-memory >>>"
+PATH_BLOCK_END="# <<< agents-memory <<<"
+
+append_path_block() {
+  local -r profile="$1"
+  if [[ -f "$profile" ]] && grep -qF "$PATH_BLOCK_BEGIN" "$profile"; then
+    return 1
+  fi
+  local -r bin_dir="$AGENTS_MEMORY_HOME/bin"
+  local literal="$bin_dir"
+  case "$bin_dir" in "$HOME"/*) literal="\$HOME/${bin_dir#"$HOME"/}" ;; esac
+  mkdir -p "$(dirname -- "$profile")"
+  cat >> "$profile" <<EOF
+
+$PATH_BLOCK_BEGIN
+case ":\${PATH}:" in
+  *:"$literal":*) ;;
+  *) export PATH="$literal:\$PATH" ;;
+esac
+$PATH_BLOCK_END
+EOF
+  echo "Updated PATH in $profile"
+}
+
+ensure_on_path() {
+  local -r bin_dir="$AGENTS_MEMORY_HOME/bin"
+  local changed=0
+  case "$(basename -- "${SHELL:-sh}")" in
+    zsh)
+      if append_path_block "${ZDOTDIR:-$HOME}/.zshrc"; then changed=1; fi ;;
+    bash)
+      if append_path_block "$HOME/.bashrc"; then changed=1; fi
+      if append_path_block "$HOME/.bash_profile"; then changed=1; fi ;;
+  esac
+  if append_path_block "$HOME/.profile"; then changed=1; fi
+
+  if command -v agents-memory >/dev/null 2>&1; then
+    return 0
+  fi
+  if [[ "$changed" -eq 1 ]]; then
+    echo
+    echo "Added agents-memory to your PATH ($bin_dir)."
+    echo "Open a new terminal, or run this in the current one:"
+    echo "    export PATH=\"$bin_dir:\$PATH\""
+  fi
+}
+
+remove_path_block() {
+  local -r profile="$1"
+  [[ -f "$profile" ]] || return 0
+  grep -qF "$PATH_BLOCK_BEGIN" "$profile" || return 0
+  local tmp
+  tmp="$(mktemp)"
+  awk -v b="$PATH_BLOCK_BEGIN" -v e="$PATH_BLOCK_END" '
+    index($0, b) { skip = 1 }
+    skip == 0 { print }
+    index($0, e) { skip = 0 }
+  ' "$profile" > "$tmp"
+  mv "$tmp" "$profile"
+  echo "Removed agents-memory PATH block from $profile"
+}
+
+remove_from_path() {
+  local profile
+  for profile in \
+    "${ZDOTDIR:-$HOME}/.zshrc" \
+    "$HOME/.bashrc" \
+    "$HOME/.bash_profile" \
+    "$HOME/.profile"; do
+    remove_path_block "$profile"
+  done
+}

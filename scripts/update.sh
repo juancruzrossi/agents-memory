@@ -19,6 +19,7 @@ main() {
   link_skills_for_installed_agents
   link_plugins_for_installed_agents
   echo "Agents Memory updated at $AGENTS_MEMORY_HOME"
+  ensure_on_path
 }
 
 backup_store() {

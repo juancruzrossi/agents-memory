@@ -5,8 +5,6 @@ AGENTS_MEMORY_HOME="${AGENTS_MEMORY_HOME:-$HOME/.agents-memory}"
 AGENTS_MEMORY_REPO="${AGENTS_MEMORY_REPO:-https://github.com/juancruzrossi/agents-memory.git}"
 AGENTS_MEMORY_REF="${AGENTS_MEMORY_REF:-main}"
 
-# When piped through `curl | bash` there is no checkout on disk, so clone the
-# repo into a temp directory and re-run the installer from there.
 bootstrap_from_remote() {
   if ! command -v git >/dev/null 2>&1; then
     echo "ERROR: git is required to install Agents Memory." >&2
@@ -53,6 +51,7 @@ main() {
   link_plugins_for_installed_agents
 
   echo "Agents Memory installed at $AGENTS_MEMORY_HOME"
+  ensure_on_path
 }
 
 main "$@"

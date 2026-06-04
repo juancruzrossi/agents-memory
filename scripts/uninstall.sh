@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 AGENTS_MEMORY_HOME="${AGENTS_MEMORY_HOME:-$HOME/.agents-memory}"
+
+source "$SCRIPT_DIR/common.sh"
 
 main() {
   validate_agents_memory_home
@@ -10,15 +13,9 @@ main() {
   unlink_agent_skills "$HOME/.config/opencode/skills"
   unlink_agent_skills "$HOME/.config/amp/skills"
   unlink_agent_plugin "$HOME/.config/opencode/plugins/agents-memory.js"
+  remove_from_path
   echo "Agents Memory symlinks removed where present."
   echo "Stored memories were kept at $AGENTS_MEMORY_HOME"
-}
-
-validate_agents_memory_home() {
-  if [[ -z "$AGENTS_MEMORY_HOME" || "$AGENTS_MEMORY_HOME" == "/" || "$AGENTS_MEMORY_HOME" == "$HOME" ]]; then
-    echo "ERROR: unsafe AGENTS_MEMORY_HOME: $AGENTS_MEMORY_HOME" >&2
-    exit 1
-  fi
 }
 
 unlink_agent_plugin() {
