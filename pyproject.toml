@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "agents-memory"
 version = "0.1.0"
 description = "Local project memory for AI coding agents."
-requires-python = ">=3.11"
+requires-python = ">=3.9"
 dependencies = []
 
 [project.urls]
@@ -18,11 +18,14 @@ agents-memory = "agents_memory.cli:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+# Dev tooling needs a newer interpreter than the package runtime (3.9+);
+# the marker keeps the dev group out of resolution on 3.9 without lowering
+# the package's own support floor.
 [dependency-groups]
 dev = [
-    "mypy>=2.1.0",
-    "pytest>=9.0.3",
-    "ruff>=0.15.12",
+    "mypy>=2.1.0; python_version >= '3.10'",
+    "pytest>=9.0.3; python_version >= '3.10'",
+    "ruff>=0.15.12; python_version >= '3.10'",
 ]
 
 [tool.pytest.ini_options]
@@ -30,13 +33,15 @@ testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 100
-target-version = "py311"
+target-version = "py39"
 
 [tool.ruff.lint]
 select = ["E", "W", "F", "I", "B", "C4", "UP", "SIM"]
 ignore = ["B007"]
 
 [tool.mypy]
-python_version = "3.11"
+# mypy can only target >=3.10; the package runtime still supports 3.9 (see
+# requires-python). Ruff's target-version = "py39" guards 3.9 syntax compat.
+python_version = "3.10"
 strict = true
 warn_return_any = true

@@ -198,7 +198,7 @@ _Avoid_: User-selected agent
 - An **Agent Adapter** connects exactly one **Agent Client** to the **Internal Tool**
 - The **Internal Tool** is not the primary user experience; users interact through their **Agent Client**
 - The **Internal Tool** supports text and JSON **Output Formats**
-- The **Core Runtime** for the **Internal Tool** is Python 3.11 or newer
+- The **Core Runtime** for the **Internal Tool** is Python 3.9 or newer
 - **Timestamps** are generated consistently by the **Core Runtime**, not independently by skills
 - A **Shared Skill Source** is installed into **Agent Clients** through **Symlink Installs**
 - A **Shared Skill Source** must follow the **Skill Standard**
@@ -274,7 +274,7 @@ _Avoid_: User-selected agent
 - automatic SQLite migrations in update were considered; resolved: v1 does not include schema migrations beyond first-time initialization.
 - updating without database protection was considered; resolved: the **Updater** creates a timestamped **Memory Backup** before changing installed tooling.
 - reinstall behavior was considered; resolved: when an existing global installation is found, the **Installer** delegates to the **Updater** instead of maintaining a separate reinstall path.
-- core implementation language was considered; resolved: the **Core Runtime** is Python 3.11 or newer, while the **Installer** may use Bash.
+- core implementation language was considered; resolved: the **Core Runtime** is Python 3.9 or newer, while the **Installer** may use Bash.
 - ad hoc skill structure was considered; resolved: all shared skills must follow the installed skill-creator **Skill Standard**.
 - skill-owned business logic was considered; resolved: shared skills are **Thin Skills** that prescribe behavior strongly while delegating persistence and project matching to the **Internal Tool**.
 - human-only output was considered; resolved: the **Internal Tool** supports text and JSON **Output Formats** for agent display, startup injection, tests, and future integrations.

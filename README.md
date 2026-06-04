@@ -10,7 +10,7 @@ Decisions, instructions, learnings, and observations are stored per project in a
 curl -fsSL https://raw.githubusercontent.com/juancruzrossi/agents-memory/main/scripts/install.sh | bash
 ```
 
-Requires Python 3.11+ and git. This installs the CLI to `~/.agents-memory/bin/agents-memory` and symlinks the skills into every coding agent it detects (Claude Code, Codex, OpenCode, Amp).
+Requires Python 3.9+ and git. This installs the CLI to `~/.agents-memory/bin/agents-memory` and symlinks the skills into every coding agent it detects (Claude Code, Codex, OpenCode, Amp).
 
 Re-running the command updates an existing installation. Stored memories are backed up first and never overwritten.
 

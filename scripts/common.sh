@@ -5,8 +5,8 @@ require_python() {
     echo "ERROR: python3 is required." >&2
     exit 1
   fi
-  if ! python3 -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 11) else 1)' >/dev/null 2>&1; then
-    echo "ERROR: python3 3.11 or newer is required." >&2
+  if ! python3 -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 9) else 1)' >/dev/null 2>&1; then
+    echo "ERROR: python3 3.9 or newer is required." >&2
     exit 1
   fi
 }
