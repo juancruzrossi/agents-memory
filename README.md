@@ -10,11 +10,13 @@ Decisions, instructions, learnings, and observations are stored per project in a
 curl -fsSL https://raw.githubusercontent.com/juancruzrossi/agents-memory/main/scripts/install.sh | bash
 ```
 
-Requires Python 3.9+ and git. This installs the `agents-memory` CLI onto your `PATH` and symlinks the skills into every coding agent it detects (Claude Code, Codex, OpenCode, Amp). Open a new terminal afterwards to use it.
+Requires Python 3.9+ and git. This installs the `agents-memory` CLI onto your `PATH` and symlinks the skills into every coding agent it detects (Claude Code, Codex, OpenCode, Amp).
 
 Re-running the command updates an existing installation. Stored memories are backed up first and never overwritten.
 
 ## Setup
+
+`/setup-agents-memory`, `/save-learnings`, and `/get-learnings` are slash commands you run inside your AI coding agent, not in the terminal.
 
 Once per agent, configure startup injection:
 
@@ -38,16 +40,17 @@ Inspect what's stored for the current project:
 
 ## Dashboard
 
-Browse and manage every stored memory in a local web UI:
+Browse and manage every stored memory in a local web UI. Run it in a **new terminal** (not inside your AI agent):
 
 ```
 agents-memory dashboard
 ```
 
-This starts a local server (bound to `127.0.0.1` on a random free port) and opens your
-browser automatically. From there you can navigate projects, add entries, edit them in
-place, retire them, or permanently delete them. Pass `--no-open` to skip launching the
-browser, or `--port <n>` to pin a specific port.
+![Agents Memory dashboard](docs/dashboard.png)
+
+This starts a local server and opens your browser automatically. From there you can
+navigate projects, add entries, edit them in place, retire them, or permanently delete
+them. Pass `--port <n>` to pin a specific port.
 
 ## Memory types
 
