@@ -1,8 +1,33 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 AGENTS_MEMORY_HOME="${AGENTS_MEMORY_HOME:-$HOME/.agents-memory}"
+AGENTS_MEMORY_REPO="${AGENTS_MEMORY_REPO:-https://github.com/juancruzrossi/agents-memory.git}"
+AGENTS_MEMORY_REF="${AGENTS_MEMORY_REF:-main}"
+
+bootstrap_from_remote() {
+  if ! command -v git >/dev/null 2>&1; then
+    echo "ERROR: git is required to uninstall Agents Memory." >&2
+    exit 1
+  fi
+  local tmp
+  tmp="$(mktemp -d)"
+  trap 'rm -rf "$tmp"' EXIT
+  git clone --quiet --depth 1 --branch "$AGENTS_MEMORY_REF" \
+    "$AGENTS_MEMORY_REPO" "$tmp/agents-memory"
+  bash "$tmp/agents-memory/scripts/uninstall.sh"
+  exit $?
+}
+
+SCRIPT_SOURCE="${BASH_SOURCE[0]:-}"
+if [[ -z "$SCRIPT_SOURCE" || ! -f "$SCRIPT_SOURCE" ]]; then
+  bootstrap_from_remote
+fi
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "$SCRIPT_SOURCE")" && pwd -P)"
+if [[ ! -f "$SCRIPT_DIR/common.sh" ]]; then
+  bootstrap_from_remote
+fi
 
 source "$SCRIPT_DIR/common.sh"
 
