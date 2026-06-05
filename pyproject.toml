@@ -18,7 +18,6 @@ agents-memory = "agents_memory.cli:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 
-# Dev tools target 3.10+; the marker keeps them off the 3.9 package floor.
 [dependency-groups]
 dev = [
     "mypy>=2.1.0; python_version >= '3.10'",
@@ -38,7 +37,6 @@ select = ["E", "W", "F", "I", "B", "C4", "UP", "SIM"]
 ignore = ["B007"]
 
 [tool.mypy]
-# mypy targets 3.10+ (its minimum); ruff's py39 target guards real 3.9 compat.
 python_version = "3.10"
 strict = true
 warn_return_any = true
