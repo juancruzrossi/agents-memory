@@ -38,7 +38,7 @@ main() {
   unlink_agent_skills "$HOME/.config/opencode/skills"
   unlink_agent_plugin "$HOME/.config/opencode/plugins/agents-memory.js"
   remove_from_path
-  echo "Agents Memory symlinks removed where present."
+  echo "Agents Memory uninstalled."
   echo "Stored memories were kept at $AGENTS_MEMORY_HOME"
 }
 
@@ -53,10 +53,9 @@ unlink_agent_plugin() {
   case "$current_target" in
     "$AGENTS_MEMORY_HOME"/plugins/*)
       rm "$link_path"
-      echo "Removed: $link_path"
       ;;
     *)
-      echo "Skipped non-Agents-Memory symlink: $link_path"
+      echo "Skipped non-Agents-Memory symlink: $link_path" >&2
       ;;
   esac
 }
@@ -77,10 +76,9 @@ unlink_agent_skills() {
     case "$current_target" in
       "$AGENTS_MEMORY_HOME"/skills/*)
         rm "$link_path"
-        echo "Removed: $link_path"
         ;;
       *)
-        echo "Skipped non-Agents-Memory symlink: $link_path"
+        echo "Skipped non-Agents-Memory symlink: $link_path" >&2
         ;;
     esac
   done

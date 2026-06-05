@@ -46,12 +46,14 @@ main() {
   install_core
   install_shared_skills
   install_shared_plugins
-  "$AGENTS_MEMORY_HOME/bin/agents-memory" init
+  "$AGENTS_MEMORY_HOME/bin/agents-memory" init >/dev/null
   link_skills_for_installed_agents
   link_plugins_for_installed_agents
-
-  echo "Agents Memory installed at $AGENTS_MEMORY_HOME"
   ensure_on_path
+
+  echo "Agents Memory installed."
+  echo
+  echo "Run /setup-agents-memory in your desired agent to finish the installation."
 }
 
 main "$@"

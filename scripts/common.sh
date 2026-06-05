@@ -83,7 +83,6 @@ link_skill() {
     local current_target
     current_target="$(readlink "$link_path")"
     if [[ "$current_target" == "$target" ]]; then
-      echo "OK: $link_path -> $target"
       return 0
     fi
     if ! confirm_replace "$link_path" "$target"; then
@@ -98,7 +97,6 @@ link_skill() {
   fi
 
   ln -s "$target" "$link_path"
-  echo "Linked: $link_path -> $target"
 }
 
 link_opencode_plugin() {
@@ -127,7 +125,6 @@ link_file() {
     local current_target
     current_target="$(readlink "$link_path")"
     if [[ "$current_target" == "$target" ]]; then
-      echo "OK: $link_path -> $target"
       return 0
     fi
     if ! confirm_replace "$link_path" "$target"; then
@@ -142,7 +139,6 @@ link_file() {
   fi
 
   ln -s "$target" "$link_path"
-  echo "Linked: $link_path -> $target"
 }
 
 confirm_replace() {
@@ -167,7 +163,6 @@ unlink_legacy_opencode_plugin() {
   case "$current_target" in
     "$AGENTS_MEMORY_HOME"/plugins/opencode/agents-memory.mjs)
       rm "$link_path"
-      echo "Removed legacy: $link_path"
       ;;
   esac
 }
@@ -193,30 +188,17 @@ case ":\${PATH}:" in
 esac
 $PATH_BLOCK_END
 EOF
-  echo "Updated PATH in $profile"
 }
 
 ensure_on_path() {
-  local -r bin_dir="$AGENTS_MEMORY_HOME/bin"
-  local changed=0
   case "$(basename -- "${SHELL:-sh}")" in
     zsh)
-      if append_path_block "${ZDOTDIR:-$HOME}/.zshrc"; then changed=1; fi ;;
+      append_path_block "${ZDOTDIR:-$HOME}/.zshrc" || true ;;
     bash)
-      if append_path_block "$HOME/.bashrc"; then changed=1; fi
-      if append_path_block "$HOME/.bash_profile"; then changed=1; fi ;;
+      append_path_block "$HOME/.bashrc" || true
+      append_path_block "$HOME/.bash_profile" || true ;;
   esac
-  if append_path_block "$HOME/.profile"; then changed=1; fi
-
-  if command -v agents-memory >/dev/null 2>&1; then
-    return 0
-  fi
-  if [[ "$changed" -eq 1 ]]; then
-    echo
-    echo "Added agents-memory to your PATH ($bin_dir)."
-    echo "Open a new terminal, or run this in the current one:"
-    echo "    export PATH=\"$bin_dir:\$PATH\""
-  fi
+  append_path_block "$HOME/.profile" || true
 }
 
 remove_path_block() {
@@ -231,7 +213,6 @@ remove_path_block() {
     index($0, e) { skip = 0 }
   ' "$profile" > "$tmp"
   mv "$tmp" "$profile"
-  echo "Removed agents-memory PATH block from $profile"
 }
 
 remove_from_path() {

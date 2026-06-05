@@ -40,11 +40,11 @@ main() {
   install_core
   install_shared_skills
   install_shared_plugins
-  "$AGENTS_MEMORY_HOME/bin/agents-memory" init
+  "$AGENTS_MEMORY_HOME/bin/agents-memory" init >/dev/null
   link_skills_for_installed_agents
   link_plugins_for_installed_agents
-  echo "Agents Memory updated at $AGENTS_MEMORY_HOME"
   ensure_on_path
+  echo "Agents Memory updated."
 }
 
 backup_store() {
@@ -56,7 +56,6 @@ backup_store() {
   stamp="$(date -u '+%Y-%m-%dT%H%M%SZ')"
   local -r backup_path="$AGENTS_MEMORY_HOME/backups/memory-$stamp.sqlite"
   cp "$db_path" "$backup_path"
-  echo "Backed up SQLite store to $backup_path"
 }
 
 main "$@"
