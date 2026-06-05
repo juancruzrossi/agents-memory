@@ -36,7 +36,6 @@ main() {
   unlink_agent_skills "$HOME/.codex/skills"
   unlink_agent_skills "$HOME/.claude/skills"
   unlink_agent_skills "$HOME/.config/opencode/skills"
-  unlink_agent_skills "$HOME/.config/amp/skills"
   unlink_agent_plugin "$HOME/.config/opencode/plugins/agents-memory.js"
   remove_from_path
   echo "Agents Memory symlinks removed where present."

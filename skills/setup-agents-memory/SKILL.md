@@ -16,7 +16,6 @@ Configure only the current agent client. Do not configure other agents.
    - `codex` (Codex): `~/.codex`
    - `claude` (Claude Code): `~/.claude`
    - `opencode` (OpenCode): `~/.config/opencode`
-   - `amp` (Amp): `~/.config/amp`
 3. Ensure this agent has symlinks to all three skills. For each skill (`get-learnings`, `save-learnings`, `setup-agents-memory`), check whether `~/.<agent>/skills/<skill>` exists and points to `~/.agents-memory/skills/<skill>`. If a symlink is missing, create it:
    ```bash
    ln -s "$(python3 -c "import os; print(os.path.relpath('$HOME/.agents-memory/skills/<skill>', '$HOME/.<agent>/skills'))")" ~/.<agent>/skills/<skill>

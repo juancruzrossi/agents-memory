@@ -52,7 +52,6 @@ link_skills_for_installed_agents() {
   link_agent_skills "$HOME/.codex" "$HOME/.codex/skills"
   link_agent_skills "$HOME/.claude" "$HOME/.claude/skills"
   link_agent_skills "$HOME/.config/opencode" "$HOME/.config/opencode/skills"
-  link_agent_skills "$HOME/.config/amp" "$HOME/.config/amp/skills"
 }
 
 link_plugins_for_installed_agents() {

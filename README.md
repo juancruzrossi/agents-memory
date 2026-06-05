@@ -2,7 +2,7 @@
 
 Project memory for AI coding agents. Each session starts with what earlier ones learned, so you stop repeating yourself and agents stop rediscovering the same things.
 
-Decisions, instructions, learnings, and observations are stored per project in a local SQLite database (`~/.agents-memory/memory.sqlite`). At session start, the active memories for the current project are injected into the agent's context automatically.
+Decisions, instructions, learnings, and observations are stored per project in a local SQLite database. At session start, the active memories for the current project are injected into the agent's context automatically.
 
 ## Install
 
@@ -10,13 +10,9 @@ Decisions, instructions, learnings, and observations are stored per project in a
 curl -fsSL https://raw.githubusercontent.com/juancruzrossi/agents-memory/main/scripts/install.sh | bash
 ```
 
-Requires Python 3.9+ and git. This installs the `agents-memory` CLI onto your `PATH` and symlinks the skills into every coding agent it detects (Claude Code, Codex, OpenCode, Amp).
-
-Re-running the command updates an existing installation. Stored memories are backed up first and never overwritten.
+This installs the `agents-memory` CLI onto your `PATH` and symlinks the skills into every coding agent it detects.
 
 ## Setup
-
-`/setup-agents-memory`, `/save-learnings`, and `/get-learnings` are slash commands you run inside your AI coding agent, not in the terminal.
 
 Once per agent, configure startup injection:
 
@@ -40,7 +36,7 @@ Inspect what's stored for the current project:
 
 ## Dashboard
 
-Browse and manage every stored memory in a local web UI. Run it in a **new terminal** (not inside your AI agent):
+Browse and manage every stored memory in a local web UI. Run it in a **new terminal**:
 
 ```
 agents-memory dashboard
@@ -61,8 +57,6 @@ them. Pass `--port <n>` to pin a specific port.
 | `learning` | stable project knowledge worth carrying forward |
 | `observation` | something discovered, not yet normative |
 
-Each entry has a priority (`high`, `medium`, `low`) that orders it within the startup budget.
-
 ## Supported agents
 
 | Agent | Skills | Startup injection |
@@ -70,15 +64,11 @@ Each entry has a priority (`high`, `medium`, `low`) that orders it within the st
 | Claude Code | ✓ | `SessionStart` hook |
 | Codex | ✓ | `SessionStart` hook |
 | OpenCode | ✓ | Plugin (`system.transform`) |
-| Amp | ✓ | Skills only |
 
-## Development
+## Update
 
 ```bash
-uv run pytest                # tests
-uv run ruff check src tests  # lint
-uv run mypy src              # type-check
-bash scripts/update.sh       # sync local changes into ~/.agents-memory
+curl -fsSL https://raw.githubusercontent.com/juancruzrossi/agents-memory/main/scripts/update.sh | bash
 ```
 
 ## Uninstall

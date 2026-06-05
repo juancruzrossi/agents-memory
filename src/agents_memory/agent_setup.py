@@ -39,8 +39,6 @@ def agent_root_path(agent: str) -> Path:
         return Path.home() / ".claude"
     if agent == "opencode":
         return Path.home() / ".config" / "opencode"
-    if agent == "amp":
-        return Path.home() / ".config" / "amp"
     raise AgentsMemoryError(f"unsupported agent: {agent!r}")
 
 

@@ -504,25 +504,6 @@ class CliTestCase(unittest.TestCase):
         self.assertIn("Second medium-priority instruction.", output)
         self.assertIn("A high-priority decision.", output)
 
-    def test_setup_configures_amp_skills_only(self) -> None:
-        user_home = Path(self.tmp.name)
-        (user_home / ".config" / "amp").mkdir(parents=True)
-        shutil.copytree(ROOT / "skills", self.home / "skills")
-
-        exit_code, output, error = self.run_cli_with_home(
-            user_home, "setup", "--agent", "amp", "--cwd", str(self.project)
-        )
-        self.assertEqual(exit_code, 0, error)
-
-        amp_skills = user_home / ".config" / "amp" / "skills"
-        self.assertTrue(amp_skills.is_dir())
-        self.assertTrue((amp_skills / "get-learnings").is_symlink())
-        self.assertTrue((amp_skills / "save-learnings").is_symlink())
-        self.assertTrue((amp_skills / "setup-agents-memory").is_symlink())
-
-        self.assertNotIn("hooks", output)
-        self.assertIn("no verified startup hook integration", output)
-
     def test_dashboard_help_lists_flags(self) -> None:
         out = io.StringIO()
         with self.assertRaises(SystemExit) as ctx, redirect_stdout(out):

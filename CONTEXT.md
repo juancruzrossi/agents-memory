@@ -232,7 +232,6 @@ _Avoid_: User-selected agent
 - Codex `SessionStart` hooks require camelCase JSON with `hookSpecificOutput.hookEventName` and `hookSpecificOutput.additionalContext`
 - Codex rejects unknown fields in `hookSpecificOutput`; do not include `suppressOutput` there
 - Codex stores per-hook trust and enablement in `~/.codex/config.toml`, and setup may enable this hook only after a `trusted_hash` already exists
-- Amp remains skills-only in v1 unless a verified startup-injection mechanism is documented later
 
 ## Example Dialogue
 
@@ -254,7 +253,7 @@ _Avoid_: User-selected agent
 - automatic memory writes were considered; resolved: **Save Proposals** require explicit user approval before persistence.
 - bundled project knowledge was considered; resolved: each **Memory Entry** should capture one reusable idea so it can be superseded independently.
 - storing full conversation evidence was considered; resolved: persist only the atomic memory content, its rationale, and the **Agent** involved.
-- storing exact model names was considered; resolved: store only the **Agent**, such as codex, claude, opencode, or amp.
+- storing exact model names was considered; resolved: store only the **Agent**, such as codex, claude, or opencode.
 - historical memory display was considered; resolved: **Get Learnings Skill** defaults to active entries and supports `--all` for active, retired, and superseded entries.
 - exact-path lookup made workspace-root and nested-directory sessions look empty even when **Related Projects** had Memory Entries; resolved: **Get Learnings Skill** displays Related Project Memory Entries while preserving each Memory Entry's owning Project.
 - duplicate memory handling was considered; resolved: **Save Operations** are limited to create, supersede, retire, or keep after comparing with existing Memory Entries.

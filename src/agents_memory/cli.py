@@ -197,8 +197,6 @@ def cmd_setup(args: argparse.Namespace) -> int:
     elif agent == "opencode":
         configure_opencode(home)
         setup_actions.append("opencode plugin")
-    elif agent == "amp":
-        setup_actions.append("no verified startup hook integration")
 
     print(f"Configured {agent}")
     for action in setup_actions:
