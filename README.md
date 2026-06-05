@@ -42,7 +42,7 @@ Browse and manage every stored memory in a local web UI. Run it in a **new termi
 agents-memory dashboard
 ```
 
-![Agents Memory dashboard](docs/dashboard.png)
+![Agents Memory dashboard](dashboard.png)
 
 This starts a local server and opens your browser automatically. From there you can
 navigate projects, add entries, edit them in place, retire them, or permanently delete
