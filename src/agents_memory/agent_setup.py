@@ -7,6 +7,8 @@ from typing import Any, cast
 
 from .errors import AgentsMemoryError
 
+_SESSION_START = "SessionStart"
+
 
 def ensure_agent_skills(home: Path, agent: str) -> None:
     source_root = home / "skills"
@@ -53,7 +55,7 @@ def configure_codex(home: Path) -> None:
     hooks = load_json_object(hooks_path, default={"hooks": {}})
     ensure_hook_command(
         hooks,
-        "SessionStart",
+        _SESSION_START,
         {
             "type": "command",
             "command": _codex_hook_command(home),
@@ -70,21 +72,12 @@ def print_codex_hook_status(home: Path) -> None:
         print("Codex: not installed")
         return
 
-    hooks_path = codex_root / "hooks.json"
-    config_path = codex_root / "config.toml"
-    hooks: dict[str, Any] = (
-        load_json_object(hooks_path, default={"hooks": {}})
-        if hooks_path.exists()
-        else {"hooks": {}}
-    )
-    command = _codex_hook_command(home)
-    location = find_hook_command_location(hooks, "SessionStart", command)
-    if location is None:
+    located = _codex_hook_state(home, codex_root / "config.toml", codex_root / "hooks.json")
+    if located is None:
         print("Codex SessionStart hook: missing")
         return
 
-    section_name = codex_hook_state_section(hooks_path, "SessionStart", *location)
-    state = read_toml_section(config_path, section_name)
+    _, state = located
     trusted = "trusted_hash" in state
     enabled = state.get("enabled")
     enabled_text = "unknown" if enabled is None else str(enabled).lower()
@@ -94,6 +87,19 @@ def print_codex_hook_status(home: Path) -> None:
     )
 
 
+def _codex_hook_state(
+    home: Path, config_path: Path, hooks_path: Path
+) -> tuple[str, dict[str, str | bool]] | None:
+    if not hooks_path.exists():
+        return None
+    hooks = load_json_object(hooks_path, default={"hooks": {}})
+    location = find_hook_command_location(hooks, _SESSION_START, _codex_hook_command(home))
+    if location is None:
+        return None
+    section_name = codex_hook_state_section(hooks_path, _SESSION_START, *location)
+    return section_name, read_toml_section(config_path, section_name)
+
+
 def configure_claude(home: Path) -> None:
     settings_path = Path.home() / ".claude" / "settings.json"
     if not settings_path.parent.is_dir():
@@ -101,7 +107,7 @@ def configure_claude(home: Path) -> None:
     settings = load_json_object(settings_path, default={})
     ensure_hook_command(
         settings,
-        "SessionStart",
+        _SESSION_START,
         {
             "type": "command",
             "command": _claude_hook_command(home),
@@ -248,16 +254,12 @@ def read_toml_section(path: Path, section_name: str) -> dict[str, str | bool]:
 def enable_trusted_codex_session_start_hook(
     home: Path, config_path: Path, hooks_path: Path
 ) -> None:
-    if not config_path.exists() or not hooks_path.exists():
+    if not config_path.exists():
         return
-
-    hooks = load_json_object(hooks_path, default={"hooks": {}})
-    command = _codex_hook_command(home)
-    location = find_hook_command_location(hooks, "SessionStart", command)
-    if location is None:
+    located = _codex_hook_state(home, config_path, hooks_path)
+    if located is None:
         return
-    section_name = codex_hook_state_section(hooks_path, "SessionStart", *location)
-    state = read_toml_section(config_path, section_name)
+    section_name, state = located
     if "trusted_hash" not in state:
         return
     set_toml_section_bool(config_path, section_name, "enabled", True)

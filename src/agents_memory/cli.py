@@ -55,19 +55,19 @@ def main(argv: list[str] | None = None) -> int:
     get_parser.add_argument(
         "--all", action="store_true", help="Include retired and superseded entries."
     )
-    get_parser.add_argument("--format", choices=("text", "json"), default="text")
+    add_format_arg(get_parser)
     get_parser.set_defaults(func=cmd_get)
 
     startup_parser = subparsers.add_parser("startup", help="Build compact startup memory.")
     add_cwd_arg(startup_parser)
-    startup_parser.add_argument("--format", choices=("text", "json"), default="text")
+    add_format_arg(startup_parser)
     startup_parser.add_argument("--budget-chars", type=int, default=None)
     startup_parser.set_defaults(func=cmd_startup)
 
     hook_parser = subparsers.add_parser("hook", help="Emit startup hook payload for an agent.")
     add_cwd_arg(hook_parser)
     hook_parser.add_argument("--agent", required=True)
-    hook_parser.add_argument("--format", choices=("text", "json"), default="text")
+    add_format_arg(hook_parser)
     hook_parser.set_defaults(func=cmd_hook)
 
     apply_parser = subparsers.add_parser(
@@ -78,7 +78,7 @@ def main(argv: list[str] | None = None) -> int:
     apply_parser.add_argument(
         "--operations-file", default="-", help="JSON file path, or '-' for stdin."
     )
-    apply_parser.add_argument("--format", choices=("text", "json"), default="text")
+    add_format_arg(apply_parser)
     apply_parser.set_defaults(func=cmd_apply)
 
     setup_parser = subparsers.add_parser("setup", help="Configure the current agent client.")
@@ -105,6 +105,10 @@ def main(argv: list[str] | None = None) -> int:
 
 def add_cwd_arg(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--cwd", default=os.getcwd(), help="Project working directory.")
+
+
+def add_format_arg(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--format", choices=("text", "json"), default="text")
 
 
 def cmd_init(args: argparse.Namespace) -> int:
@@ -156,22 +160,19 @@ def cmd_hook(args: argparse.Namespace) -> int:
     with closing(connect_initialized(home)) as conn:
         project, compact = build_startup_view(conn, Path(args.cwd), budget=budget)
     text = format_startup_text(project, compact, budget)
+    if args.format != "json":
+        print(text)
+        return 0
     if agent == "codex":
-        payload = {
+        payload: dict[str, Any] = {
             "hookSpecificOutput": {
                 "hookEventName": "SessionStart",
                 "additionalContext": text,
             }
         }
-        if args.format == "json":
-            print(json.dumps(payload, indent=2))
-        else:
-            print(text)
-        return 0
-    if args.format == "json":
-        print(json.dumps({"agent": agent, "context": text}, indent=2))
     else:
-        print(text)
+        payload = {"agent": agent, "context": text}
+    print(json.dumps(payload, indent=2))
     return 0
 
 

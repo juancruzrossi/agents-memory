@@ -15,6 +15,10 @@ ENTRY_SELECT_COLUMNS = (
     "superseded_by_id, created_at, status_changed_at"
 )
 
+PROJECT_SELECT_COLUMNS = (
+    "id, identity_kind, identity_value, canonical_path, git_root, git_remote_url, last_seen_at"
+)
+
 ENTRY_ORDER_SQL = """
 order by
   case status when 'active' then 0 when 'superseded' then 1 else 2 end,
@@ -113,12 +117,8 @@ def ensure_project(conn: sqlite3.Connection, cwd: Path) -> tuple[int, dict[str, 
     )
     conn.commit()
     row = conn.execute(
-        """
-        select id, identity_kind, identity_value, canonical_path,
-               git_root, git_remote_url, last_seen_at
-        from projects
-        where identity_kind = ? and identity_value = ?
-        """,
+        f"select {PROJECT_SELECT_COLUMNS} from projects "
+        "where identity_kind = ? and identity_value = ?",
         (identity.identity_kind, identity.identity_value),
     ).fetchone()
     if row is None:
@@ -168,19 +168,17 @@ def fetch_related_project_memory(
 ) -> list[dict[str, Any]]:
     current_path = project["canonical_path"]
     rows = conn.execute(
-        """
-        select projects.id, projects.identity_kind, projects.identity_value,
-               projects.canonical_path, projects.git_root,
-               projects.git_remote_url, projects.last_seen_at
+        f"""
+        select {PROJECT_SELECT_COLUMNS}
         from projects
-        where projects.id != ?
+        where id != ?
           and exists (
             select 1
             from memory_entries
             where memory_entries.project_id = projects.id
               and (? = 1 or memory_entries.status = 'active')
           )
-        order by projects.canonical_path, projects.identity_kind
+        order by canonical_path, identity_kind
         """,
         (project["id"], 1 if include_all else 0),
     ).fetchall()

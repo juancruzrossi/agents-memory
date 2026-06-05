@@ -37,11 +37,7 @@ def list_projects(conn: sqlite3.Connection) -> list[dict[str, Any]]:
 def get_project(conn: sqlite3.Connection, project_id: int) -> dict[str, Any]:
     """Return a project row or raise NotFoundError."""
     row = conn.execute(
-        """
-        select id, identity_kind, identity_value, canonical_path,
-               git_root, git_remote_url, last_seen_at
-        from projects where id = ?
-        """,
+        f"select {store.PROJECT_SELECT_COLUMNS} from projects where id = ?",
         (project_id,),
     ).fetchone()
     if row is None:

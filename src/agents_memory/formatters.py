@@ -95,7 +95,7 @@ def format_startup_text(project: dict[str, Any], compact: dict[str, Any], budget
         f"Source: ~/.agents-memory ({project['identity_kind']}:{project['identity_value']})",
         f"Budget: {compact['used_chars']}/{budget} chars",
     ]
-    for type_name in ("instruction", "decision", "learning", "observation"):
+    for type_name in sorted(TYPE_ORDER, key=TYPE_ORDER.__getitem__):
         group = [entry for entry in entries if entry["type"] == type_name]
         if not group:
             continue
