@@ -103,8 +103,9 @@ def _codex_hook_state(
 def configure_claude(home: Path) -> None:
     settings_path = Path.home() / ".claude" / "settings.json"
     if not settings_path.parent.is_dir():
-        raise AgentsMemoryError("Claude Code is not installed")
+        raise AgentsMemoryError("Claude is not installed")
     settings = load_json_object(settings_path, default={})
+    drop_claude_session_hooks(settings, home)
     ensure_hook_command(
         settings,
         _SESSION_START,
@@ -114,6 +115,78 @@ def configure_claude(home: Path) -> None:
         },
     )
     save_json_object(settings_path, settings)
+
+
+def _is_claude_memory_hook(hook: Any, home: Path) -> bool:
+    if not isinstance(hook, dict):
+        return False
+    command = hook.get("command")
+    return isinstance(command, str) and str(home / "bin" / "agents-memory") in command
+
+
+def claude_session_hook_commands(settings: dict[str, Any], home: Path) -> list[str]:
+    hooks = settings.get("hooks")
+    if not isinstance(hooks, dict):
+        return []
+    groups = hooks.get(_SESSION_START)
+    if not isinstance(groups, list):
+        return []
+    found: list[str] = []
+    for group in groups:
+        commands = group.get("hooks") if isinstance(group, dict) else None
+        if not isinstance(commands, list):
+            continue
+        found.extend(h["command"] for h in commands if _is_claude_memory_hook(h, home))
+    return found
+
+
+def drop_claude_session_hooks(settings: dict[str, Any], home: Path) -> None:
+    hooks = settings.get("hooks")
+    if not isinstance(hooks, dict):
+        return
+    groups = hooks.get(_SESSION_START)
+    if not isinstance(groups, list):
+        return
+    kept: list[Any] = []
+    for group in groups:
+        commands = group.get("hooks") if isinstance(group, dict) else None
+        if isinstance(commands, list):
+            group["hooks"] = [h for h in commands if not _is_claude_memory_hook(h, home)]
+            if not group["hooks"]:
+                continue
+        kept.append(group)
+    hooks[_SESSION_START] = kept
+
+
+def print_claude_hook_status(home: Path) -> None:
+    claude_root = Path.home() / ".claude"
+    if not claude_root.is_dir():
+        print("Claude: not installed")
+        return
+    settings_path = claude_root / "settings.json"
+    settings = load_json_object(settings_path, default={}) if settings_path.exists() else {}
+    commands = claude_session_hook_commands(settings, home)
+    if not commands:
+        print("Claude SessionStart hook: missing")
+    elif len(commands) > 1:
+        print(f"Claude SessionStart hook: installed, duplicates={len(commands)}")
+    else:
+        print("Claude SessionStart hook: installed")
+
+
+def print_opencode_plugin_status(home: Path) -> None:
+    opencode_root = Path.home() / ".config" / "opencode"
+    if not opencode_root.is_dir():
+        print("OpenCode: not installed")
+        return
+    link_path = opencode_root / "plugins" / "agents-memory.js"
+    source = home / "plugins" / "opencode" / "agents-memory.js"
+    if link_path.is_symlink() and link_path.resolve() == source.resolve():
+        print("OpenCode plugin: installed")
+    elif link_path.exists() or link_path.is_symlink():
+        print("OpenCode plugin: present, not linked to agents-memory")
+    else:
+        print("OpenCode plugin: missing")
 
 
 def configure_opencode(home: Path) -> None:

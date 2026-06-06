@@ -451,6 +451,51 @@ class CliTestCase(unittest.TestCase):
         self.assertIn("Codex SessionStart hook: installed", output)
         self.assertIn("trusted=false", output)
 
+    def test_setup_claude_replaces_legacy_hook_without_duplicating(self) -> None:
+        user_home = Path(self.tmp.name)
+        claude_dir = user_home / ".claude"
+        claude_dir.mkdir()
+        shutil.copytree(ROOT / "skills", self.home / "skills")
+        legacy = (
+            f"{self.home / 'bin' / 'agents-memory'} hook --agent claude-code "
+            '--cwd "${CLAUDE_PROJECT_DIR:-$PWD}" --format text'
+        )
+        (claude_dir / "settings.json").write_text(
+            json.dumps(
+                {"hooks": {"SessionStart": [{"hooks": [{"type": "command", "command": legacy}]}]}}
+            ),
+            encoding="utf-8",
+        )
+
+        exit_code, _, error = self.run_cli_with_home(
+            user_home, "setup", "--agent", "claude", "--cwd", str(self.project)
+        )
+        self.assertEqual(exit_code, 0, error)
+
+        settings = json.loads((claude_dir / "settings.json").read_text(encoding="utf-8"))
+        commands = [
+            hook["command"]
+            for group in settings["hooks"]["SessionStart"]
+            for hook in group["hooks"]
+            if "agents-memory" in hook["command"]
+        ]
+        self.assertEqual(len(commands), 1)
+        self.assertIn("--agent claude ", commands[0] + " ")
+        self.assertNotIn("claude-code", commands[0])
+
+    def test_doctor_reports_all_three_agents(self) -> None:
+        user_home = Path(self.tmp.name)
+        (user_home / ".claude").mkdir()
+        shutil.copytree(ROOT / "skills", self.home / "skills")
+        self.run_cli_with_home(user_home, "setup", "--agent", "claude", "--cwd", str(self.project))
+
+        exit_code, output, error = self.run_cli_with_home(user_home, "doctor")
+
+        self.assertEqual(exit_code, 0, error)
+        self.assertIn("Claude SessionStart hook: installed", output)
+        self.assertIn("Codex", output)
+        self.assertIn("OpenCode", output)
+
     def test_get_groups_same_type_entries_under_single_header(self) -> None:
         payload = {
             "operations": [

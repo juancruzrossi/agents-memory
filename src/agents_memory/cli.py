@@ -13,7 +13,9 @@ from .agent_setup import (
     configure_codex,
     configure_opencode,
     ensure_agent_skills,
+    print_claude_hook_status,
     print_codex_hook_status,
+    print_opencode_plugin_status,
 )
 from .config import read_startup_budget
 from .constants import SUPPORTED_SETUP_AGENTS, VALID_AGENTS
@@ -232,7 +234,9 @@ def cmd_doctor(args: argparse.Namespace) -> int:
             entry_count = conn.execute("select count(*) from memory_entries").fetchone()[0]
         print(f"Projects: {project_count}")
         print(f"Memory entries: {entry_count}")
+    print_claude_hook_status(home)
     print_codex_hook_status(home)
+    print_opencode_plugin_status(home)
     return 0
 
 

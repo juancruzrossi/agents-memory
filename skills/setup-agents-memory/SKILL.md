@@ -14,7 +14,7 @@ Configure only the current agent client. Do not configure other agents.
    `~/.agents-memory/bin/agents-memory doctor`
 2. Detect the current agent client from the runtime context and filesystem (the identifier in backticks is what you pass as `--agent`):
    - `codex` (Codex): `~/.codex`
-   - `claude` (Claude Code): `~/.claude`
+   - `claude` (Claude): `~/.claude`
    - `opencode` (OpenCode): `~/.config/opencode`
 3. Ensure this agent has symlinks to all three skills. For each skill (`get-learnings`, `save-learnings`, `setup-agents-memory`), check whether `~/.<agent>/skills/<skill>` exists and points to `~/.agents-memory/skills/<skill>`. If a symlink is missing, create it:
    ```bash

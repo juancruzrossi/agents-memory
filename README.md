@@ -61,7 +61,7 @@ them. Pass `--port <n>` to pin a specific port.
 
 | Agent | Skills | Startup injection |
 |---|---|---|
-| Claude Code | ✓ | `SessionStart` hook |
+| Claude | ✓ | `SessionStart` hook |
 | Codex | ✓ | `SessionStart` hook |
 | OpenCode | ✓ | Plugin (`system.transform`) |
 
