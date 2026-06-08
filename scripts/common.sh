@@ -197,8 +197,9 @@ ensure_on_path() {
     bash)
       append_path_block "$HOME/.bashrc" || true
       append_path_block "$HOME/.bash_profile" || true ;;
+    *)
+      append_path_block "$HOME/.profile" || true ;;
   esac
-  append_path_block "$HOME/.profile" || true
 }
 
 remove_path_block() {
