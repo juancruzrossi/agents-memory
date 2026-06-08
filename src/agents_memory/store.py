@@ -18,19 +18,6 @@ PROJECT_SELECT_COLUMNS = (
     "id, identity_kind, identity_value, canonical_path, git_root, git_remote_url, last_seen_at"
 )
 
-MEMORY_ENTRIES_TABLE = """
-  id integer primary key,
-  project_id integer not null references projects(id),
-  type text not null check (type in ('instruction', 'decision', 'observation')),
-  status text not null default 'active' check (status in ('active', 'archived')),
-  priority text not null default 'medium' check (priority in ('high', 'medium', 'low')),
-  content text not null,
-  rationale text not null,
-  agent text not null,
-  created_at text not null,
-  status_changed_at text
-"""
-
 ENTRY_ORDER_SQL = """
 order by
   case status when 'active' then 0 else 1 end,
@@ -68,7 +55,7 @@ def connect_initialized(home: Path) -> sqlite3.Connection:
 
 def initialize_schema(conn: sqlite3.Connection) -> None:
     conn.executescript(
-        f"""
+        """
         create table if not exists projects (
           id integer primary key,
           identity_kind text not null check (identity_kind in ('git', 'path')),
@@ -80,37 +67,21 @@ def initialize_schema(conn: sqlite3.Connection) -> None:
           unique(identity_kind, identity_value)
         );
 
-        create table if not exists memory_entries ({MEMORY_ENTRIES_TABLE});
+        create table if not exists memory_entries (
+          id integer primary key,
+          project_id integer not null references projects(id),
+          type text not null check (type in ('instruction', 'decision', 'observation')),
+          status text not null default 'active' check (status in ('active', 'archived')),
+          priority text not null default 'medium' check (priority in ('high', 'medium', 'low')),
+          content text not null,
+          rationale text not null,
+          agent text not null,
+          created_at text not null,
+          status_changed_at text
+        );
         """
     )
-    migrate_legacy_entries(conn)
     conn.commit()
-
-
-def migrate_legacy_entries(conn: sqlite3.Connection) -> None:
-    """Rebuild pre-simplification tables: drop superseded links, map old type/status values."""
-    columns = {row["name"] for row in conn.execute("pragma table_info(memory_entries)")}
-    if "superseded_by_id" not in columns:
-        return
-    conn.executescript(
-        f"""
-        drop table if exists memory_entries_new;
-        begin;
-        create table memory_entries_new ({MEMORY_ENTRIES_TABLE});
-        insert into memory_entries_new (
-          id, project_id, type, status, priority, content, rationale, agent,
-          created_at, status_changed_at
-        )
-        select id, project_id,
-          case type when 'learning' then 'observation' else type end,
-          case status when 'active' then 'active' else 'archived' end,
-          priority, content, rationale, agent, created_at, status_changed_at
-        from memory_entries;
-        drop table memory_entries;
-        alter table memory_entries_new rename to memory_entries;
-        commit;
-        """
-    )
 
 
 def timestamp() -> str:
