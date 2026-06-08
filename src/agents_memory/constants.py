@@ -1,19 +1,17 @@
-VALID_TYPES = {"instruction", "learning", "observation", "decision"}
-VALID_STATUSES = {"active", "retired", "superseded"}
+VALID_TYPES = {"instruction", "decision", "observation"}
+VALID_STATUSES = {"active", "archived"}
 VALID_PRIORITIES = {"high", "medium", "low"}
 VALID_AGENTS = {"codex", "claude", "opencode", "dashboard", "unknown"}
 SUPPORTED_SETUP_AGENTS = {"codex", "claude", "opencode"}
 
 STATUS_ORDER = {
     "active": 0,
-    "superseded": 1,
-    "retired": 2,
+    "archived": 1,
 }
 TYPE_ORDER = {
     "instruction": 0,
     "decision": 1,
-    "learning": 2,
-    "observation": 3,
+    "observation": 2,
 }
 PRIORITY_ORDER = {
     "high": 0,

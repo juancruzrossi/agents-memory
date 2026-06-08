@@ -11,20 +11,31 @@ from .errors import AgentsMemoryError
 from .identity import resolve_project_identity
 
 ENTRY_SELECT_COLUMNS = (
-    "id, type, status, priority, content, rationale, agent, "
-    "superseded_by_id, created_at, status_changed_at"
+    "id, type, status, priority, content, rationale, agent, created_at, status_changed_at"
 )
 
 PROJECT_SELECT_COLUMNS = (
     "id, identity_kind, identity_value, canonical_path, git_root, git_remote_url, last_seen_at"
 )
 
+MEMORY_ENTRIES_TABLE = """
+  id integer primary key,
+  project_id integer not null references projects(id),
+  type text not null check (type in ('instruction', 'decision', 'observation')),
+  status text not null default 'active' check (status in ('active', 'archived')),
+  priority text not null default 'medium' check (priority in ('high', 'medium', 'low')),
+  content text not null,
+  rationale text not null,
+  agent text not null,
+  created_at text not null,
+  status_changed_at text
+"""
+
 ENTRY_ORDER_SQL = """
 order by
-  case status when 'active' then 0 when 'superseded' then 1 else 2 end,
+  case status when 'active' then 0 else 1 end,
   case priority when 'high' then 0 when 'medium' then 1 else 2 end,
-  case type when 'instruction' then 0 when 'decision' then 1
-       when 'learning' then 2 else 3 end,
+  case type when 'instruction' then 0 when 'decision' then 1 else 2 end,
   id
 """
 
@@ -57,7 +68,7 @@ def connect_initialized(home: Path) -> sqlite3.Connection:
 
 def initialize_schema(conn: sqlite3.Connection) -> None:
     conn.executescript(
-        """
+        f"""
         create table if not exists projects (
           id integer primary key,
           identity_kind text not null check (identity_kind in ('git', 'path')),
@@ -69,22 +80,37 @@ def initialize_schema(conn: sqlite3.Connection) -> None:
           unique(identity_kind, identity_value)
         );
 
-        create table if not exists memory_entries (
-          id integer primary key,
-          project_id integer not null references projects(id),
-          type text not null check (type in ('instruction', 'learning', 'observation', 'decision')),
-          status text not null check (status in ('active', 'retired', 'superseded')),
-          priority text not null default 'medium' check (priority in ('high', 'medium', 'low')),
-          content text not null,
-          rationale text not null,
-          agent text not null,
-          superseded_by_id integer references memory_entries(id),
-          created_at text not null,
-          status_changed_at text
-        );
+        create table if not exists memory_entries ({MEMORY_ENTRIES_TABLE});
         """
     )
+    migrate_legacy_entries(conn)
     conn.commit()
+
+
+def migrate_legacy_entries(conn: sqlite3.Connection) -> None:
+    """Rebuild pre-simplification tables: drop superseded links, map old type/status values."""
+    columns = {row["name"] for row in conn.execute("pragma table_info(memory_entries)")}
+    if "superseded_by_id" not in columns:
+        return
+    conn.executescript(
+        f"""
+        drop table if exists memory_entries_new;
+        begin;
+        create table memory_entries_new ({MEMORY_ENTRIES_TABLE});
+        insert into memory_entries_new (
+          id, project_id, type, status, priority, content, rationale, agent,
+          created_at, status_changed_at
+        )
+        select id, project_id,
+          case type when 'learning' then 'observation' else type end,
+          case status when 'active' then 'active' else 'archived' end,
+          priority, content, rationale, agent, created_at, status_changed_at
+        from memory_entries;
+        drop table memory_entries;
+        alter table memory_entries_new rename to memory_entries;
+        commit;
+        """
+    )
 
 
 def timestamp() -> str:
@@ -226,20 +252,14 @@ def apply_operations(
         if action == "create":
             new_id = create_entry(conn, project_id, operation, agent)
             results.append({"operation": index, "action": "create", "id": new_id})
-        elif action == "supersede":
+        elif action == "update":
             target_id = require_int(operation, "target_id", index)
-            new_id = create_entry(conn, project_id, operation, agent)
-            mark_status(conn, project_id, target_id, "superseded", superseded_by_id=new_id)
-            results.append(
-                {"operation": index, "action": "supersede", "target_id": target_id, "id": new_id}
-            )
-        elif action == "retire":
+            update_entry(conn, project_id, target_id, operation, agent)
+            results.append({"operation": index, "action": "update", "target_id": target_id})
+        elif action == "archive":
             target_id = require_int(operation, "target_id", index)
-            mark_status(conn, project_id, target_id, "retired", superseded_by_id=None)
-            results.append({"operation": index, "action": "retire", "target_id": target_id})
-        elif action == "keep":
-            keep_target = operation.get("target_id")
-            results.append({"operation": index, "action": "keep", "target_id": keep_target})
+            mark_status(conn, project_id, target_id, "archived")
+            results.append({"operation": index, "action": "archive", "target_id": target_id})
         else:
             raise AgentsMemoryError(f"operation {index} has invalid action: {action!r}")
     conn.commit()
@@ -252,22 +272,15 @@ def create_entry(
     operation: dict[str, Any],
     agent: str,
 ) -> int:
-    type_name = require_choice(operation, "type", VALID_TYPES)
-    priority = operation.get("priority", "medium")
-    if priority not in VALID_PRIORITIES:
-        raise AgentsMemoryError(f"invalid priority: {priority!r}")
-    content = require_text(operation, "content")
-    rationale = require_text(operation, "rationale")
-    now = timestamp()
+    type_name, priority, content, rationale = validated_entry_fields(operation)
     cursor = conn.execute(
         """
         insert into memory_entries (
-          project_id, type, status, priority, content, rationale, agent,
-          superseded_by_id, created_at, status_changed_at
+          project_id, type, status, priority, content, rationale, agent, created_at
         )
-        values (?, ?, 'active', ?, ?, ?, ?, null, ?, null)
+        values (?, ?, 'active', ?, ?, ?, ?, ?)
         """,
-        (project_id, type_name, priority, content, rationale, agent, now),
+        (project_id, type_name, priority, content, rationale, agent, timestamp()),
     )
     row_id = cursor.lastrowid
     if row_id is None:
@@ -275,22 +288,51 @@ def create_entry(
     return row_id
 
 
+def update_entry(
+    conn: sqlite3.Connection,
+    project_id: int,
+    entry_id: int,
+    operation: dict[str, Any],
+    agent: str,
+) -> None:
+    type_name, priority, content, rationale = validated_entry_fields(operation)
+    cursor = conn.execute(
+        """
+        update memory_entries
+        set type = ?, priority = ?, content = ?, rationale = ?, agent = ?
+        where id = ? and project_id = ? and status = 'active'
+        """,
+        (type_name, priority, content, rationale, agent, entry_id, project_id),
+    )
+    if cursor.rowcount != 1:
+        raise AgentsMemoryError(f"active memory entry #{entry_id} was not found in this project")
+
+
+def validated_entry_fields(operation: dict[str, Any]) -> tuple[str, str, str, str]:
+    type_name = require_choice(operation, "type", VALID_TYPES)
+    priority = operation.get("priority", "medium")
+    if priority not in VALID_PRIORITIES:
+        raise AgentsMemoryError(f"invalid priority: {priority!r}")
+    content = require_text(operation, "content")
+    rationale = require_text(operation, "rationale")
+    return type_name, priority, content, rationale
+
+
 def mark_status(
     conn: sqlite3.Connection,
     project_id: int,
     entry_id: int,
     status: str,
-    superseded_by_id: int | None,
 ) -> None:
     if status not in VALID_STATUSES:
         raise AgentsMemoryError(f"invalid status: {status!r}")
     cursor = conn.execute(
         """
         update memory_entries
-        set status = ?, status_changed_at = ?, superseded_by_id = ?
+        set status = ?, status_changed_at = ?
         where id = ? and project_id = ? and status = 'active'
         """,
-        (status, timestamp(), superseded_by_id, entry_id, project_id),
+        (status, timestamp(), entry_id, project_id),
     )
     if cursor.rowcount != 1:
         raise AgentsMemoryError(f"active memory entry #{entry_id} was not found in this project")

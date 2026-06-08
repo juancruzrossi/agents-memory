@@ -18,5 +18,5 @@ Always use the shared internal tool. Do not inspect SQLite directly.
 
 - Always respond in the same language the user is writing in.
 - Do not inspect or manually merge memories from other projects; rely on the Internal Tool's related Project discovery.
-- Do not create, edit, retire, or supersede memories.
+- Do not create, update, or archive memories.
 - Do not add files to the project.

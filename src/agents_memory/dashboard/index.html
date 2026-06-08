@@ -19,7 +19,6 @@
       --amber: #9a6700; --amber-bg: rgba(154, 103, 0, 0.12);
       --blue:  #2d5fa8; --blue-bg:  rgba(45, 95, 168, 0.12);
       --gray:  #6b6259; --gray-bg:  rgba(107, 98, 89, 0.12);
-      --violet:#6d4aa8; --violet-bg:rgba(109, 74, 168, 0.12);
       --red:   #a83232; --red-bg:   rgba(168, 50, 50, 0.12);
       --serif: ui-serif, "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
       --sans: ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", sans-serif;
@@ -34,7 +33,6 @@
       --amber: #e0b257; --amber-bg: rgba(224, 178, 87, 0.14);
       --blue:  #84aef0; --blue-bg:  rgba(132, 174, 240, 0.14);
       --gray:  #a59b8d; --gray-bg:  rgba(165, 155, 141, 0.14);
-      --violet:#b79be6; --violet-bg:rgba(183, 155, 230, 0.14);
       --red:   #e08a8a; --red-bg:   rgba(224, 138, 138, 0.14);
     }
 
@@ -182,14 +180,12 @@
     }
     .b-instruction { color: var(--blue);   background: var(--blue-bg); }
     .b-decision    { color: var(--amber);  background: var(--amber-bg); }
-    .b-learning    { color: var(--green);  background: var(--green-bg); }
-    .b-observation { color: var(--gray);   background: var(--gray-bg); }
+    .b-observation { color: var(--green);  background: var(--green-bg); }
     .b-high   { color: var(--red);    background: var(--red-bg); }
     .b-medium { color: var(--amber);  background: var(--amber-bg); }
     .b-low    { color: var(--gray);   background: var(--gray-bg); }
-    .b-active     { color: var(--green);  background: var(--green-bg); }
-    .b-retired    { color: var(--gray);   background: var(--gray-bg); }
-    .b-superseded { color: var(--violet); background: var(--violet-bg); }
+    .b-active   { color: var(--green); background: var(--green-bg); }
+    .b-archived { color: var(--gray);  background: var(--gray-bg); }
 
     .empty {
       text-align: center; padding: 70px 20px; color: var(--text-dim);
@@ -286,14 +282,12 @@
         </div>
         <div class="filters">
           <button class="chip" data-status="active" aria-pressed="true" type="button">active</button>
-          <button class="chip" data-status="retired" aria-pressed="false" type="button">retired</button>
-          <button class="chip" data-status="superseded" aria-pressed="false" type="button">superseded</button>
+          <button class="chip" data-status="archived" aria-pressed="false" type="button">archived</button>
         </div>
         <div id="entries"></div>
         <div class="legend">
           <div class="row"><span class="badge b-active">active</span> currently valid for this project and injected into agent sessions at startup.</div>
-          <div class="row"><span class="badge b-retired">retired</span> kept for history but no longer injected into sessions.</div>
-          <div class="row"><span class="badge b-superseded">superseded</span> replaced by a newer entry; kept for history.</div>
+          <div class="row"><span class="badge b-archived">archived</span> kept for reference but no longer injected into sessions.</div>
         </div>
       </main>
     </div>
@@ -309,7 +303,6 @@
             <select id="fType">
               <option value="instruction">instruction</option>
               <option value="decision">decision</option>
-              <option value="learning">learning</option>
               <option value="observation">observation</option>
             </select>
           </div>
@@ -343,7 +336,7 @@
   <div class="overlay" id="confirmOverlay">
     <div class="modal">
       <h2>Purge entry</h2>
-      <p class="warn"><b>Permanently delete</b> this entry from the store. This cannot be undone, and unlike retiring it keeps no history.</p>
+      <p class="warn"><b>Permanently delete</b> this entry from the store. This cannot be undone, and unlike archiving it keeps no history.</p>
       <div class="modal-actions">
         <button class="btn" id="confirmCancel" type="button">Cancel</button>
         <button class="btn danger" id="confirmPurge" type="button">Delete forever</button>
@@ -358,7 +351,7 @@
 
     const ICON = {
       edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
-      retire: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8"/><path d="M10 12h4"/></svg>',
+      archive: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8"/><path d="M10 12h4"/></svg>',
       reactivate: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v5h-5"/></svg>',
       purge: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1L5 6"/><path d="M10 11v6M14 11v6"/></svg>',
       add: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>',
@@ -525,8 +518,8 @@
         const actions = el("div", { class: "actions" });
         actions.appendChild(actionButton("edit", "", "Edit", () => openEditor(e)));
         if (e.status === "active") {
-          actions.appendChild(actionButton("retire", "", "Retire", () => doStatus(e.id, "retire")));
-        } else if (e.status === "retired") {
+          actions.appendChild(actionButton("archive", "", "Archive", () => doStatus(e.id, "archive")));
+        } else if (e.status === "archived") {
           actions.appendChild(actionButton("reactivate", "", "Reactivate", () => doStatus(e.id, "reactivate")));
         }
         actions.appendChild(actionButton("purge", "purge", "Purge", () => openConfirm(e.id)));
@@ -552,7 +545,7 @@
     }
 
     function openEditor(entry) {
-      const e = entry || { type: "learning", priority: "medium", content: "", rationale: "" };
+      const e = entry || { type: "observation", priority: "medium", content: "", rationale: "" };
       state.editingId = entry ? entry.id : null;
       document.getElementById("editorTitle").textContent = entry ? "Edit entry" : "New entry";
       document.getElementById("fType").value = e.type;
@@ -594,7 +587,7 @@
     async function doStatus(id, action) {
       try {
         await api("POST", "/api/entries/" + id + "/" + action);
-        toast(action === "retire" ? "Entry retired." : "Entry reactivated.", true);
+        toast(action === "archive" ? "Entry archived." : "Entry reactivated.", true);
         await loadEntries();
       } catch (err) {
         toast(err.message);

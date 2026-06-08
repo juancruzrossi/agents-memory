@@ -82,7 +82,7 @@ class _Handler(BaseHTTPRequestHandler):
         elif (
             len(segments) == 4
             and segments[1] == "entries"
-            and segments[3] in {"retire", "reactivate"}
+            and segments[3] in {"archive", "reactivate"}
         ):
             self._entry_status(method, self._as_id(segments[2]), segments[3])
         else:
@@ -123,8 +123,8 @@ class _Handler(BaseHTTPRequestHandler):
             self._send_error(405, "method not allowed")
             return
         with closing(self._connect()) as conn:
-            if action == "retire":
-                data.retire_entry(conn, entry_id)
+            if action == "archive":
+                data.archive_entry(conn, entry_id)
             else:
                 data.reactivate_entry(conn, entry_id)
             self._send_json(200, {"id": entry_id})

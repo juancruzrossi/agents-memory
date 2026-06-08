@@ -2,7 +2,7 @@
 
 Project memory for AI coding agents. Each session starts with what earlier ones learned, so you stop repeating yourself and agents stop rediscovering the same things.
 
-Decisions, instructions, learnings, and observations are stored per project in a local SQLite database. At session start, the active memories for the current project are injected into the agent's context automatically.
+Decisions, instructions, and observations are stored per project in a local SQLite database. At session start, the active memories for the current project are injected into the agent's context automatically.
 
 ## Install
 
@@ -45,7 +45,7 @@ agents-memory dashboard
 ![Agents Memory dashboard](assets/dashboard.png)
 
 This starts a local server and opens your browser automatically. From there you can
-navigate projects, add entries, edit them in place, retire them, or permanently delete
+navigate projects, add entries, edit them in place, archive them, or permanently delete
 them. Pass `--port <n>` to pin a specific port.
 
 ## Memory types
@@ -54,8 +54,7 @@ them. Pass `--port <n>` to pin a specific port.
 |---|---|
 | `instruction` | the agent should follow a rule or process |
 | `decision` | you chose a direction and want to keep the trade-off |
-| `learning` | stable project knowledge worth carrying forward |
-| `observation` | something discovered, not yet normative |
+| `observation` | stable project knowledge or something discovered worth carrying forward |
 
 ## Supported agents
 

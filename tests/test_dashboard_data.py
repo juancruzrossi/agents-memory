@@ -28,7 +28,7 @@ class DashboardDataTestCase(unittest.TestCase):
 
     def _fields(self, **overrides: str) -> dict[str, str]:
         fields = {
-            "type": "learning",
+            "type": "observation",
             "priority": "medium",
             "content": "A reusable fact.",
             "rationale": "Worth keeping.",
@@ -48,17 +48,17 @@ class DashboardDataTestCase(unittest.TestCase):
 
     def test_list_entries_filters_by_status(self) -> None:
         active_id = data.create_entry(self.conn, self.project_id, self._fields())
-        retired_id = data.create_entry(self.conn, self.project_id, self._fields())
+        archived_id = data.create_entry(self.conn, self.project_id, self._fields())
         self.conn.execute(
-            "update memory_entries set status = 'retired' where id = ?", (retired_id,)
+            "update memory_entries set status = 'archived' where id = ?", (archived_id,)
         )
         self.conn.commit()
 
         active_only = data.list_entries(self.conn, self.project_id, {"active"})
         self.assertEqual([e["id"] for e in active_only], [active_id])
 
-        both = data.list_entries(self.conn, self.project_id, {"active", "retired"})
-        self.assertEqual({e["id"] for e in both}, {active_id, retired_id})
+        both = data.list_entries(self.conn, self.project_id, {"active", "archived"})
+        self.assertEqual({e["id"] for e in both}, {active_id, archived_id})
 
     def test_list_entries_rejects_invalid_status(self) -> None:
         with self.assertRaises(AgentsMemoryError):
@@ -69,9 +69,9 @@ class DashboardDataTestCase(unittest.TestCase):
         empty_dir.mkdir()
         empty_id, _ = store.ensure_project(self.conn, empty_dir)
         data.create_entry(self.conn, self.project_id, self._fields())
-        retired_id = data.create_entry(self.conn, self.project_id, self._fields())
+        archived_id = data.create_entry(self.conn, self.project_id, self._fields())
         self.conn.execute(
-            "update memory_entries set status = 'retired' where id = ?", (retired_id,)
+            "update memory_entries set status = 'archived' where id = ?", (archived_id,)
         )
         self.conn.commit()
 
@@ -121,7 +121,7 @@ class DashboardDataTestCase(unittest.TestCase):
         entry_id = data.create_entry(self.conn, self.project_id, self._fields())
 
         with self.assertRaises(AgentsMemoryError):
-            data.update_entry(self.conn, entry_id, {"status": "retired"})
+            data.update_entry(self.conn, entry_id, {"status": "archived"})
 
         entry = data.list_entries(self.conn, self.project_id, {"active"})[0]
         self.assertEqual(entry["status"], "active")
@@ -142,31 +142,27 @@ class DashboardDataTestCase(unittest.TestCase):
         with self.assertRaises(AgentsMemoryError):
             data.update_entry(self.conn, 999, {"content": "Nope."})
 
-    def test_retire_then_reactivate(self) -> None:
+    def test_archive_then_reactivate(self) -> None:
         entry_id = data.create_entry(self.conn, self.project_id, self._fields())
 
-        data.retire_entry(self.conn, entry_id)
-        retired = data.list_entries(self.conn, self.project_id, {"retired"})
-        self.assertEqual([e["id"] for e in retired], [entry_id])
-        self.assertIsNotNone(retired[0]["status_changed_at"])
+        data.archive_entry(self.conn, entry_id)
+        archived = data.list_entries(self.conn, self.project_id, {"archived"})
+        self.assertEqual([e["id"] for e in archived], [entry_id])
+        self.assertIsNotNone(archived[0]["status_changed_at"])
 
         data.reactivate_entry(self.conn, entry_id)
         active = data.list_entries(self.conn, self.project_id, {"active"})
         self.assertEqual([e["id"] for e in active], [entry_id])
 
-    def test_retire_non_active_raises(self) -> None:
+    def test_archive_non_active_raises(self) -> None:
         entry_id = data.create_entry(self.conn, self.project_id, self._fields())
-        data.retire_entry(self.conn, entry_id)
+        data.archive_entry(self.conn, entry_id)
 
         with self.assertRaises(AgentsMemoryError):
-            data.retire_entry(self.conn, entry_id)
+            data.archive_entry(self.conn, entry_id)
 
-    def test_reactivate_superseded_raises(self) -> None:
+    def test_reactivate_active_raises(self) -> None:
         entry_id = data.create_entry(self.conn, self.project_id, self._fields())
-        self.conn.execute(
-            "update memory_entries set status = 'superseded' where id = ?", (entry_id,)
-        )
-        self.conn.commit()
 
         with self.assertRaises(AgentsMemoryError):
             data.reactivate_entry(self.conn, entry_id)
@@ -176,30 +172,8 @@ class DashboardDataTestCase(unittest.TestCase):
 
         data.purge_entry(self.conn, entry_id)
 
-        remaining = data.list_entries(
-            self.conn, self.project_id, {"active", "retired", "superseded"}
-        )
+        remaining = data.list_entries(self.conn, self.project_id, {"active", "archived"})
         self.assertEqual(remaining, [])
-
-    def test_purge_nulls_inbound_supersede_reference(self) -> None:
-        keeper_id = data.create_entry(self.conn, self.project_id, self._fields())
-        replacement_id = data.create_entry(self.conn, self.project_id, self._fields())
-        self.conn.execute(
-            "update memory_entries set status = 'superseded', superseded_by_id = ? where id = ?",
-            (replacement_id, keeper_id),
-        )
-        self.conn.commit()
-
-        data.purge_entry(self.conn, replacement_id)
-
-        remaining = data.list_entries(
-            self.conn, self.project_id, {"active", "retired", "superseded"}
-        )
-        ids = [e["id"] for e in remaining]
-        self.assertNotIn(replacement_id, ids)
-        self.assertIn(keeper_id, ids)
-        keeper = next(e for e in remaining if e["id"] == keeper_id)
-        self.assertIsNone(keeper["superseded_by_id"])
 
     def test_purge_unknown_id_raises(self) -> None:
         with self.assertRaises(AgentsMemoryError):

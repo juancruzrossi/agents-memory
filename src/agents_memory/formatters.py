@@ -50,8 +50,6 @@ def append_entries(lines: list[str], entries: list[dict[str, Any]]) -> None:
         lines.append(f"- #{entry['id']} [{entry['priority']}] {entry['content']}")
         lines.append(f"  Reason: {entry['rationale']}")
         lines.append(f"  Agent: {entry['agent']} | Created: {entry['created_at']}")
-        if entry["superseded_by_id"] is not None:
-            lines.append(f"  Superseded by: #{entry['superseded_by_id']}")
 
 
 def build_compact_view(entries: list[dict[str, Any]], budget: int) -> dict[str, Any]:
@@ -120,10 +118,8 @@ def format_apply_text(results: list[dict[str, Any]]) -> str:
         action = result["action"]
         if action == "create":
             lines.append(f"- Created #{result['id']}")
-        elif action == "supersede":
-            lines.append(f"- Superseded #{result['target_id']} with #{result['id']}")
-        elif action == "retire":
-            lines.append(f"- Retired #{result['target_id']}")
-        elif action == "keep":
-            lines.append(f"- Kept #{result.get('target_id', 'n/a')}")
+        elif action == "update":
+            lines.append(f"- Updated #{result['target_id']}")
+        elif action == "archive":
+            lines.append(f"- Archived #{result['target_id']}")
     return "\n".join(lines)
