@@ -63,11 +63,12 @@ def update_entry(conn: sqlite3.Connection, entry_id: int, fields: dict[str, Any]
     values = {name: _FIELD_VALIDATORS[name](fields) for name in fields}
     assignments = ", ".join(f"{column} = ?" for column in values)
     cursor = conn.execute(
-        f"update memory_entries set {assignments}, agent = 'dashboard' where id = ?",
+        f"update memory_entries set {assignments}, agent = 'dashboard' "
+        "where id = ? and status = 'active'",
         (*values.values(), entry_id),
     )
     if cursor.rowcount != 1:
-        raise NotFoundError(f"memory entry #{entry_id} was not found")
+        raise NotFoundError(f"active memory entry #{entry_id} was not found")
     conn.commit()
 
 
