@@ -68,7 +68,7 @@ class CliTestCase(unittest.TestCase):
             "operations": [
                 {
                     "action": "create",
-                    "type": "learning",
+                    "type": "observation",
                     "priority": "medium",
                     "content": "Use the path-only fixture for path identity checks.",
                     "rationale": "The parent workspace is only a container.",
@@ -167,7 +167,7 @@ class CliTestCase(unittest.TestCase):
         self.assertIn("Active Decisions", output)
         self.assertIn("Store project memories outside project directories.", output)
 
-    def test_supersede_preserves_history_and_excludes_old_entry_from_startup(self) -> None:
+    def test_update_revises_entry_in_place(self) -> None:
         create_payload = {
             "operations": [
                 {
@@ -190,17 +190,15 @@ class CliTestCase(unittest.TestCase):
             stdin=json.dumps(create_payload),
         )
 
-        supersede_payload = {
+        update_payload = {
             "operations": [
                 {
-                    "action": "supersede",
+                    "action": "update",
                     "target_id": 1,
                     "type": "decision",
                     "priority": "high",
-                    "content": "Use active, retired, and superseded memory states.",
-                    "rationale": (
-                        "History must be preserved while startup injects only active entries."
-                    ),
+                    "content": "Use active and archived memory states.",
+                    "rationale": "A single active version per idea keeps startup clean.",
                 }
             ]
         }
@@ -212,19 +210,18 @@ class CliTestCase(unittest.TestCase):
             "codex",
             "--operations-file",
             "-",
-            stdin=json.dumps(supersede_payload),
+            stdin=json.dumps(update_payload),
         )
         self.assertEqual(exit_code, 0, error)
 
         exit_code, all_output, error = self.run_cli("get", "--cwd", str(self.project), "--all")
         self.assertEqual(exit_code, 0, error)
-        self.assertIn("Superseded Decisions", all_output)
-        self.assertIn("Superseded by: #2", all_output)
+        self.assertIn("Use active and archived memory states.", all_output)
+        self.assertNotIn("Use an enabled flag for memory injection.", all_output)
 
         exit_code, startup_output, error = self.run_cli("startup", "--cwd", str(self.project))
         self.assertEqual(exit_code, 0, error)
-        self.assertIn("Use active, retired, and superseded memory states.", startup_output)
-        self.assertNotIn("Use an enabled flag for memory injection.", startup_output)
+        self.assertIn("Use active and archived memory states.", startup_output)
 
     def test_invalid_budget_fails(self) -> None:
         exit_code, _, error = self.run_cli(
@@ -249,7 +246,7 @@ class CliTestCase(unittest.TestCase):
                     "rationale": "The batch should roll back when a later operation fails.",
                 },
                 {
-                    "action": "retire",
+                    "action": "archive",
                     "target_id": 999,
                 },
             ]
@@ -272,7 +269,7 @@ class CliTestCase(unittest.TestCase):
         self.assertEqual(exit_code, 0, error)
         self.assertNotIn("This should not persist.", output)
 
-    def test_cannot_retire_superseded_entry(self) -> None:
+    def test_cannot_archive_already_archived_entry(self) -> None:
         create_payload = {
             "operations": [
                 {
@@ -294,30 +291,8 @@ class CliTestCase(unittest.TestCase):
             "-",
             stdin=json.dumps(create_payload),
         )
-        supersede_payload = {
-            "operations": [
-                {
-                    "action": "supersede",
-                    "target_id": 1,
-                    "type": "decision",
-                    "priority": "high",
-                    "content": "New decision.",
-                    "rationale": "Updated project understanding.",
-                }
-            ]
-        }
-        self.run_cli(
-            "apply",
-            "--cwd",
-            str(self.project),
-            "--agent",
-            "codex",
-            "--operations-file",
-            "-",
-            stdin=json.dumps(supersede_payload),
-        )
 
-        retire_payload = {"operations": [{"action": "retire", "target_id": 1}]}
+        archive_payload = {"operations": [{"action": "archive", "target_id": 1}]}
         exit_code, _, error = self.run_cli(
             "apply",
             "--cwd",
@@ -326,14 +301,26 @@ class CliTestCase(unittest.TestCase):
             "codex",
             "--operations-file",
             "-",
-            stdin=json.dumps(retire_payload),
+            stdin=json.dumps(archive_payload),
         )
+        self.assertEqual(exit_code, 0, error)
 
+        exit_code, _, error = self.run_cli(
+            "apply",
+            "--cwd",
+            str(self.project),
+            "--agent",
+            "codex",
+            "--operations-file",
+            "-",
+            stdin=json.dumps(archive_payload),
+        )
         self.assertEqual(exit_code, 1)
         self.assertIn("active memory entry #1 was not found", error)
-        exit_code, output, error = self.run_cli("get", "--cwd", str(self.project), "--all")
+
+        exit_code, output, error = self.run_cli("startup", "--cwd", str(self.project))
         self.assertEqual(exit_code, 0, error)
-        self.assertIn("Superseded by: #2", output)
+        self.assertNotIn("Old decision.", output)
 
     def test_hook_returns_codex_payload(self) -> None:
         payload = {

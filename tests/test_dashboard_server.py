@@ -29,7 +29,7 @@ class DashboardServerTestCase(unittest.TestCase):
             seed,
             self.project_id,
             {
-                "type": "learning",
+                "type": "observation",
                 "priority": "medium",
                 "content": "Seed entry.",
                 "rationale": "Seeded for tests.",
@@ -86,12 +86,12 @@ class DashboardServerTestCase(unittest.TestCase):
 
     def test_entries_status_filter(self) -> None:
         conn = store.connect_initialized(self.home)
-        retired = data.create_entry(
+        archived = data.create_entry(
             conn,
             self.project_id,
-            {"type": "learning", "priority": "low", "content": "Old.", "rationale": "Old."},
+            {"type": "observation", "priority": "low", "content": "Old.", "rationale": "Old."},
         )
-        conn.execute("update memory_entries set status='retired' where id=?", (retired,))
+        conn.execute("update memory_entries set status='archived' where id=?", (archived,))
         conn.commit()
         conn.close()
 
@@ -102,9 +102,9 @@ class DashboardServerTestCase(unittest.TestCase):
 
         _, all_body, _ = self._request(
             "GET",
-            f"/api/projects/{self.project_id}/entries?status=active,retired,superseded",
+            f"/api/projects/{self.project_id}/entries?status=active,archived",
         )
-        self.assertEqual({e["id"] for e in all_body["entries"]}, {self.entry_id, retired})
+        self.assertEqual({e["id"] for e in all_body["entries"]}, {self.entry_id, archived})
 
     def test_entries_default_status_is_active(self) -> None:
         status, body, _ = self._request("GET", f"/api/projects/{self.project_id}/entries")
@@ -145,7 +145,7 @@ class DashboardServerTestCase(unittest.TestCase):
         )
         self.assertEqual(status, 400)
         _, body, _ = self._request(
-            "GET", f"/api/projects/{self.project_id}/entries?status=active,retired,superseded"
+            "GET", f"/api/projects/{self.project_id}/entries?status=active,archived"
         )
         self.assertEqual(len(body["entries"]), 1)
 
@@ -165,7 +165,7 @@ class DashboardServerTestCase(unittest.TestCase):
 
     def test_patch_non_whitelisted_field_is_400(self) -> None:
         status, _, _ = self._request(
-            "PATCH", f"/api/entries/{self.entry_id}", {"status": "retired"}
+            "PATCH", f"/api/entries/{self.entry_id}", {"status": "archived"}
         )
         self.assertEqual(status, 400)
 
@@ -173,8 +173,8 @@ class DashboardServerTestCase(unittest.TestCase):
         status, _, _ = self._request("PATCH", "/api/entries/999", {"content": "x"})
         self.assertEqual(status, 404)
 
-    def test_retire_then_reactivate(self) -> None:
-        status, _, _ = self._request("POST", f"/api/entries/{self.entry_id}/retire")
+    def test_archive_then_reactivate(self) -> None:
+        status, _, _ = self._request("POST", f"/api/entries/{self.entry_id}/archive")
         self.assertEqual(status, 200)
         _, active, _ = self._request("GET", f"/api/projects/{self.project_id}/entries")
         self.assertEqual(active["entries"], [])
@@ -184,15 +184,15 @@ class DashboardServerTestCase(unittest.TestCase):
         _, active, _ = self._request("GET", f"/api/projects/{self.project_id}/entries")
         self.assertEqual([e["id"] for e in active["entries"]], [self.entry_id])
 
-    def test_retire_unknown_entry_is_404(self) -> None:
-        status, _, _ = self._request("POST", "/api/entries/999/retire")
+    def test_archive_unknown_entry_is_404(self) -> None:
+        status, _, _ = self._request("POST", "/api/entries/999/archive")
         self.assertEqual(status, 404)
 
     def test_delete_purges_entry(self) -> None:
         status, _, _ = self._request("DELETE", f"/api/entries/{self.entry_id}")
         self.assertEqual(status, 200)
         _, body, _ = self._request(
-            "GET", f"/api/projects/{self.project_id}/entries?status=active,retired,superseded"
+            "GET", f"/api/projects/{self.project_id}/entries?status=active,archived"
         )
         self.assertEqual(body["entries"], [])
 

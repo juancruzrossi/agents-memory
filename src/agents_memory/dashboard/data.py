@@ -71,14 +71,14 @@ def update_entry(conn: sqlite3.Connection, entry_id: int, fields: dict[str, Any]
     conn.commit()
 
 
-def retire_entry(conn: sqlite3.Connection, entry_id: int) -> None:
-    """Move an active entry to retired."""
-    _change_status(conn, entry_id, from_status="active", to_status="retired")
+def archive_entry(conn: sqlite3.Connection, entry_id: int) -> None:
+    """Move an active entry to archived."""
+    _change_status(conn, entry_id, from_status="active", to_status="archived")
 
 
 def reactivate_entry(conn: sqlite3.Connection, entry_id: int) -> None:
-    """Move a retired entry back to active."""
-    _change_status(conn, entry_id, from_status="retired", to_status="active")
+    """Move an archived entry back to active."""
+    _change_status(conn, entry_id, from_status="archived", to_status="active")
 
 
 def _change_status(
@@ -98,15 +98,11 @@ def _change_status(
 
 
 def purge_entry(conn: sqlite3.Connection, entry_id: int) -> None:
-    """Hard-delete an entry; null inbound supersede references first, atomically."""
-    with conn:
-        conn.execute(
-            "update memory_entries set superseded_by_id = null where superseded_by_id = ?",
-            (entry_id,),
-        )
-        cursor = conn.execute("delete from memory_entries where id = ?", (entry_id,))
-        if cursor.rowcount != 1:
-            raise NotFoundError(f"memory entry #{entry_id} was not found")
+    """Hard-delete an entry from the store."""
+    cursor = conn.execute("delete from memory_entries where id = ?", (entry_id,))
+    if cursor.rowcount != 1:
+        raise NotFoundError(f"memory entry #{entry_id} was not found")
+    conn.commit()
 
 
 def list_entries(

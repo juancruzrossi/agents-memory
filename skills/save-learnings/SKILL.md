@@ -14,11 +14,10 @@ Persist only user-approved project memories. Never auto-save.
 2. Review the current conversation and existing entries.
 3. Propose numbered operations using only:
    - `create`
-   - `supersede`
-   - `retire`
-   - `keep`
-4. Each proposed memory must be atomic and include:
-   - `type`: `instruction`, `learning`, `observation`, or `decision`
+   - `update` (revise an existing active entry in place)
+   - `archive` (drop an active entry from startup injection; kept for reference)
+4. Each `create` or `update` must be atomic and include:
+   - `type`: `instruction`, `decision`, or `observation`
    - `priority`: `high`, `medium`, or `low`
    - `content`
    - `rationale`
@@ -41,13 +40,15 @@ Content:
 Rationale:
   ...
 
-[2] supersede #4, medium
+[2] update #4, medium
 Before:
   ...
 After:
   ...
 Rationale:
   ...
+
+[3] archive #7
 
 Reply with `approve all`, `approve 1,3`, or `reject`.
 ```
@@ -67,7 +68,7 @@ Send a JSON object with an `operations` array:
       "rationale": "..."
     },
     {
-      "action": "supersede",
+      "action": "update",
       "target_id": 4,
       "type": "decision",
       "priority": "medium",
@@ -75,7 +76,7 @@ Send a JSON object with an `operations` array:
       "rationale": "..."
     },
     {
-      "action": "retire",
+      "action": "archive",
       "target_id": 7
     }
   ]
@@ -86,7 +87,7 @@ Send a JSON object with an `operations` array:
 
 - Always respond in the same language the user is writing in.
 - Do not store transcripts or conversation summaries.
-- Do not edit old rows in place; use `supersede`.
+- Use `update` to revise an active entry in place; use `archive` to drop one from startup.
 - Do not persist unapproved operations.
 - Do not add files to the project.
 - Do not use `unknown` as the agent if the current agent can be inferred from runtime context.

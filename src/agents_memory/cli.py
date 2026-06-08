@@ -54,9 +54,7 @@ def main(argv: list[str] | None = None) -> int:
 
     get_parser = subparsers.add_parser("get", help="Show project memory entries.")
     add_cwd_arg(get_parser)
-    get_parser.add_argument(
-        "--all", action="store_true", help="Include retired and superseded entries."
-    )
+    get_parser.add_argument("--all", action="store_true", help="Include archived entries.")
     add_format_arg(get_parser)
     get_parser.set_defaults(func=cmd_get)
 
