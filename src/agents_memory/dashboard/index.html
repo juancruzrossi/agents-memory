@@ -516,8 +516,8 @@
       const tbody = el("tbody", {});
       entries.forEach((e, i) => {
         const actions = el("div", { class: "actions" });
-        actions.appendChild(actionButton("edit", "", "Edit", () => openEditor(e)));
         if (e.status === "active") {
+          actions.appendChild(actionButton("edit", "", "Edit", () => openEditor(e)));
           actions.appendChild(actionButton("archive", "", "Archive", () => doStatus(e.id, "archive")));
         } else if (e.status === "archived") {
           actions.appendChild(actionButton("reactivate", "", "Reactivate", () => doStatus(e.id, "reactivate")));

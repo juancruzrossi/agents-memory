@@ -142,6 +142,16 @@ class DashboardDataTestCase(unittest.TestCase):
         with self.assertRaises(AgentsMemoryError):
             data.update_entry(self.conn, 999, {"content": "Nope."})
 
+    def test_update_entry_on_archived_raises(self) -> None:
+        entry_id = data.create_entry(self.conn, self.project_id, self._fields())
+        data.archive_entry(self.conn, entry_id)
+
+        with self.assertRaises(AgentsMemoryError):
+            data.update_entry(self.conn, entry_id, {"content": "Should not edit archived."})
+
+        entry = data.list_entries(self.conn, self.project_id, {"archived"})[0]
+        self.assertEqual(entry["content"], "A reusable fact.")
+
     def test_archive_then_reactivate(self) -> None:
         entry_id = data.create_entry(self.conn, self.project_id, self._fields())
 
